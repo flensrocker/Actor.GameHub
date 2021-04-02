@@ -18,7 +18,8 @@ namespace Actor.GameHub.Identity.Abtractions
 
   public class UserLoginSuccessMsg : IUserManagerMsg
   {
-    public Guid UserId { get; set; }
+    public Guid UserId { get; init; }
+    public string Username { get; init; } = null!;
   }
 
   public class UserLoginErrorMsg : IUserManagerMsg

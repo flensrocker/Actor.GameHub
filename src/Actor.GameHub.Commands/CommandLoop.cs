@@ -61,7 +61,7 @@ namespace Actor.GameHub.Commands
             {
               try
               {
-                var loginResponse = await identityManager.Ask(new UserLoginMsg { Username = parameter }, TimeSpan.FromSeconds(5.0));
+                var loginResponse = await identityManager.Ask(new UserLoginMsg { Username = parameter }, TimeSpan.FromSeconds(5.0)).ConfigureAwait(false);
 
                 switch (loginResponse)
                 {

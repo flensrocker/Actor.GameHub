@@ -1,4 +1,5 @@
 ﻿using System;
+using Actor.GameHub.Identity.Abtractions;
 using Akka.Actor;
 using Akka.Event;
 
@@ -8,16 +9,23 @@ namespace Actor.GameHub.Identity.Actors
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-    private readonly Guid _userId;
-    private readonly string _username;
+    private Guid _userId;
+    private string? _username;
 
-    public UserActor(Guid userId, string username)
+    public UserActor()
     {
-      _userId = userId;
-      _username = username;
+      Receive<UserLoginSuccessMsg>(OnLogin);
     }
 
-    public static Props Props(Guid userId, string username)
-      => Akka.Actor.Props.Create(() => new UserActor(userId, username));
+    private void OnLogin(UserLoginSuccessMsg successMsg)
+    {
+      _userId = successMsg.UserId;
+      _username = successMsg.Username;
+    }
+
+    public static Props Props()
+      => Akka.Actor.Props
+        .Create(() => new UserActor())
+        .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

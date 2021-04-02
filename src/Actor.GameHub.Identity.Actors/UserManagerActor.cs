@@ -46,7 +46,7 @@ namespace Actor.GameHub.Identity.Actors
       var userAddress = Sender.Path.Address;
       var userId = Guid.NewGuid();
       var userRef = Context.ActorOf(
-        UserActor.Props(userId, loginMsg.Username)
+        UserActor.Props()
           .WithDeploy(Deploy.None.WithScope(new RemoteScope(userAddress))), $"User-{userId}");
 
       var user = new User
@@ -59,7 +59,14 @@ namespace Actor.GameHub.Identity.Actors
       _usernameMap.Add(loginMsg.Username, user);
       _userIdMap.Add(user.UserId, user);
       _userActorMap.Add(userRef, user);
-      Sender.Tell(new UserLoginSuccessMsg { UserId = user.UserId }, userRef);
+
+      var successMsg = new UserLoginSuccessMsg
+      {
+        UserId = user.UserId,
+        Username = loginMsg.Username,
+      };
+      userRef.Tell(successMsg);
+      Sender.Tell(successMsg);
 
       _logger.Info($"{nameof(LoginUser)} [{loginMsg.Username}]: {user.UserId} from {userAddress}");
     }
