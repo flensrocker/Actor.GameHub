@@ -15,6 +15,10 @@ namespace Actor.GameHub
 
       var userManager = gamehubSystem.ActorOf(UserManagerActor.Props(), "UserManager");
 
+      var userManagerSelection = gamehubSystem.ActorSelection("/user/UserManager");
+      var userManagerRef = await userManagerSelection.ResolveOne(TimeSpan.FromSeconds(5.0));
+      System.Diagnostics.Debug.Assert(userManager == userManagerRef);
+
       var run = true;
       var users = new Dictionary<string, Guid>();
       do
