@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub", "src\Actor.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.PingPong", "src\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj", "{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity", "src\Actor.GameHub.Identity\Actor.GameHub.Identity.csproj", "{C291C462-CE47-4157-A176-CC9281F10F9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x64.Build.0 = Release|Any CPU
 		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x86.ActiveCfg = Release|Any CPU
 		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x86.Build.0 = Release|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Release|x64.Build.0 = Release|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C291C462-CE47-4157-A176-CC9281F10F9C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

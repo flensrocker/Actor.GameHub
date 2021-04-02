@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Actor.GameHub.UserManager;
-using Actor.GameHub.UserManager.Messages;
+using Actor.GameHub.Identity;
 using Akka.Actor;
 
 namespace Actor.GameHub
@@ -12,12 +11,7 @@ namespace Actor.GameHub
     static async Task Main(string[] args)
     {
       var gamehubSystem = ActorSystem.Create("GameHub");
-
-      var userManager = gamehubSystem.ActorOf(UserManagerActor.Props(), "UserManager");
-
-      var userManagerSelection = gamehubSystem.ActorSelection("/user/UserManager");
-      var userManagerRef = await userManagerSelection.ResolveOne(TimeSpan.FromSeconds(5.0));
-      System.Diagnostics.Debug.Assert(userManager == userManagerRef);
+      var identityManager = gamehubSystem.AddIdentity();
 
       var run = true;
       var users = new Dictionary<string, Guid>();
@@ -57,7 +51,7 @@ namespace Actor.GameHub
             {
               if (users.TryGetValue(parameter, out var userId))
               {
-                userManager.Tell(new UserLogoutMsg { UserId = userId });
+                identityManager.Tell(new UserLogoutMsg { UserId = userId });
                 users.Remove(parameter);
               }
               break;
@@ -66,7 +60,7 @@ namespace Actor.GameHub
             {
               try
               {
-                var loginResponse = await userManager.Ask(new UserLoginMsg { Username = parameter }, TimeSpan.FromSeconds(5.0));
+                var loginResponse = await identityManager.Ask(new UserLoginMsg { Username = parameter }, TimeSpan.FromSeconds(5.0));
 
                 switch (loginResponse)
                 {
@@ -103,7 +97,7 @@ namespace Actor.GameHub
       } while (run);
 
       foreach (var user in users)
-        userManager.Tell(new UserLogoutMsg { UserId = user.Value });
+        identityManager.Tell(new UserLogoutMsg { UserId = user.Value });
 
       await gamehubSystem.Terminate();
     }

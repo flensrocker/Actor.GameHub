@@ -1,12 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using Actor.GameHub.UserManager.Messages;
 using Akka.Actor;
 using Akka.Event;
 
-namespace Actor.GameHub.UserManager
+namespace Actor.GameHub.Identity
 {
-  public class UserManagerActor : ReceiveActor
+  public interface IUserManagerMsg
+  {
+  }
+
+  public class UserLogoutMsg : IUserManagerMsg
+  {
+    public Guid UserId { get; init; }
+  }
+
+  public class UserLoginMsg : IUserManagerMsg
+  {
+    public string Username { get; init; }
+  }
+
+  public class UserLoginSuccessMsg : IUserManagerMsg
+  {
+    public Guid UserId { get; set; }
+  }
+
+  public class UserLoginErrorMsg : IUserManagerMsg
+  {
+    public string ErrorMessage { get; init; }
+  }
+
+  public class UserManager : ReceiveActor
   {
     private class User
     {
@@ -20,7 +43,7 @@ namespace Actor.GameHub.UserManager
     private readonly IDictionary<string, User> _usernameMap = new Dictionary<string, User>();
     private readonly IDictionary<Guid, User> _userIdMap = new Dictionary<Guid, User>();
 
-    public UserManagerActor()
+    public UserManager()
     {
       Receive<UserLoginMsg>(msg => string.IsNullOrWhiteSpace(msg.Username), msg => LoginError(msg, "username required"));
       Receive<UserLoginMsg>(msg => _usernameMap.ContainsKey(msg.Username), msg => LoginError(msg, "username invalid"));
@@ -63,6 +86,6 @@ namespace Actor.GameHub.UserManager
     }
 
     public static Props Props()
-      => Akka.Actor.Props.Create(() => new UserManagerActor());
+      => Akka.Actor.Props.Create(() => new UserManager());
   }
 }

@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Actor.GameHub.Identity\Actor.GameHub.Identity.csproj" />
     <ProjectReference Include="..\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj" />
   </ItemGroup>
 
