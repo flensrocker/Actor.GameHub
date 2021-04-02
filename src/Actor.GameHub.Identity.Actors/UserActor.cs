@@ -21,6 +21,8 @@ namespace Actor.GameHub.Identity.Actors
     {
       _userId = successMsg.UserId;
       _username = successMsg.Username;
+
+      _logger.Info($"{nameof(OnLogin)}: {_username} logged in with userId {_userId}");
     }
 
     public static Props Props()
