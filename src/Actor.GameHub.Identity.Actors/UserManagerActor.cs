@@ -48,6 +48,7 @@ namespace Actor.GameHub.Identity.Actors
       var userRef = Context.ActorOf(
         UserActor.Props()
           .WithDeploy(Deploy.None.WithScope(new RemoteScope(userAddress))), $"User-{userId}");
+      Context.Watch(userRef);
 
       var user = new User
       {
