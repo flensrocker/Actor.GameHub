@@ -15,7 +15,7 @@ namespace Actor.GameHub.Commands
       string gameServerAddress = "")
     {
       var identityManager = await actorSystem
-        .ActorSelection($"{gameServerAddress}{IdentityMetaData.IdentityManagerPath}")
+        .ActorSelection($"{gameServerAddress}{IdentityMetadata.IdentityManagerPath}")
         .ResolveOne(TimeSpan.FromSeconds(5.0))
         .ConfigureAwait(false);
 

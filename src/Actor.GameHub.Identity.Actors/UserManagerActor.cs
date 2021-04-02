@@ -4,13 +4,13 @@ using Actor.GameHub.Identity.Abtractions;
 using Akka.Actor;
 using Akka.Event;
 
-namespace Actor.GameHub.Identity
+namespace Actor.GameHub.Identity.Actors
 {
-  public class UserManager : ReceiveActor
+  public class UserManagerActor : ReceiveActor
   {
     private class User
     {
-      public Guid UserId { get; } = Guid.NewGuid();
+      public Guid UserId { get; init; }
       public string Username { get; init; } = null!;
       public IActorRef UserActor { get; init; } = null!;
     }
@@ -19,14 +19,16 @@ namespace Actor.GameHub.Identity
 
     private readonly IDictionary<string, User> _usernameMap = new Dictionary<string, User>();
     private readonly IDictionary<Guid, User> _userIdMap = new Dictionary<Guid, User>();
+    private readonly IDictionary<IActorRef, User> _userActorMap = new Dictionary<IActorRef, User>();
 
-    public UserManager()
+    public UserManagerActor()
     {
       Receive<UserLoginMsg>(msg => string.IsNullOrWhiteSpace(msg.Username), msg => LoginError(msg, "username required"));
       Receive<UserLoginMsg>(msg => _usernameMap.ContainsKey(msg.Username), msg => LoginError(msg, "username invalid"));
       Receive<UserLoginMsg>(msg => msg.Username.ToLowerInvariant() == "timeout", msg => { });
       Receive<UserLoginMsg>(LoginUser);
       Receive<UserLogoutMsg>(msg => _userIdMap.ContainsKey(msg.UserId), LogoutUser);
+      Receive<Terminated>(OnTerminated);
     }
 
     private void LoginError(UserLoginMsg loginMsg, string errorMessage)
@@ -41,30 +43,49 @@ namespace Actor.GameHub.Identity
 
     private void LoginUser(UserLoginMsg loginMsg)
     {
+      var userAddress = Sender.Path.Address;
+      var userId = Guid.NewGuid();
+      var userRef = Context.ActorOf(
+        UserActor.Props(userId, loginMsg.Username)
+          .WithDeploy(Deploy.None.WithScope(new RemoteScope(userAddress))), $"User-{userId}");
+
       var user = new User
       {
+        UserId = userId,
         Username = loginMsg.Username,
-        UserActor = Sender,
+        UserActor = userRef,
       };
 
       _usernameMap.Add(loginMsg.Username, user);
       _userIdMap.Add(user.UserId, user);
-      Sender.Tell(new UserLoginSuccessMsg { UserId = user.UserId });
+      _userActorMap.Add(userRef, user);
+      Sender.Tell(new UserLoginSuccessMsg { UserId = user.UserId }, userRef);
 
-      _logger.Info($"{nameof(LoginUser)} [{loginMsg.Username}]: {user.UserId}");
+      _logger.Info($"{nameof(LoginUser)} [{loginMsg.Username}]: {user.UserId} from {userAddress}");
     }
 
     private void LogoutUser(UserLogoutMsg logoutMsg)
     {
-      if (_userIdMap.Remove(logoutMsg.UserId, out var user))
+      if (_userIdMap.TryGetValue(logoutMsg.UserId, out var user))
       {
-        _usernameMap.Remove(user.Username);
+        Context.Stop(user.UserActor);
 
         _logger.Info($"{nameof(LogoutUser)} [{user.Username}]: {user.UserId}");
       }
     }
 
+    private void OnTerminated(Terminated terminatedMsg)
+    {
+      _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg}");
+
+      if (_userActorMap.Remove(terminatedMsg.ActorRef, out var user))
+      {
+        _userIdMap.Remove(user.UserId);
+        _usernameMap.Remove(user.Username);
+      }
+    }
+
     public static Props Props()
-      => Akka.Actor.Props.Create(() => new UserManager());
+      => Akka.Actor.Props.Create(() => new UserManagerActor());
   }
 }
