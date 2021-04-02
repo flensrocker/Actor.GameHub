@@ -11,6 +11,8 @@ namespace Actor.GameHub.Cli
   {
     static async Task Main(string[] args)
     {
+      var gameServerAddress = "akka.tcp://GameHub@localhost:8081";
+
       var config = File.Exists("app.config")
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync("app.config"))
         : ConfigurationFactory.Default();
@@ -20,7 +22,8 @@ namespace Actor.GameHub.Cli
       await gamehubSystem.CommandLoopAsync(
         msg => { Console.Write(msg); return Task.CompletedTask; },
         msg => { Console.Error.Write(msg); return Task.CompletedTask; },
-        () => Task.FromResult(Console.ReadLine()));
+        () => Task.FromResult(Console.ReadLine()),
+        gameServerAddress);
 
       await gamehubSystem.Terminate();
     }

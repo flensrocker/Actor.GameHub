@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31129.286
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub", "src\Actor.GameHub\Actor.GameHub.csproj", "{8EAD715A-CD4B-4F8C-AC83-761E8B977890}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Server", "src\Actor.GameHub.Server\Actor.GameHub.Server.csproj", "{8EAD715A-CD4B-4F8C-AC83-761E8B977890}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.PingPong", "src\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj", "{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}"
 EndProject

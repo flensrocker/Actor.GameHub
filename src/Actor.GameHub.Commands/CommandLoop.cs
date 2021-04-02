@@ -11,10 +11,11 @@ namespace Actor.GameHub.Commands
       this ActorSystem actorSystem,
       Func<string?, Task> writeAsync,
       Func<string?, Task> errorAsync,
-      Func<Task<string?>> readLineAsync)
+      Func<Task<string?>> readLineAsync,
+      string gameServerAddress = "")
     {
       var identityManager = await actorSystem
-        .ActorSelection(IdentityMetaData.IdentityManagerPath)
+        .ActorSelection($"{gameServerAddress}{IdentityMetaData.IdentityManagerPath}")
         .ResolveOne(TimeSpan.FromSeconds(5.0))
         .ConfigureAwait(false);
 
