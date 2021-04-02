@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Actor.GameHub.Identity;
+using Actor.GameHub.Identity.Abtractions;
 using Akka.Actor;
 
 namespace Actor.GameHub

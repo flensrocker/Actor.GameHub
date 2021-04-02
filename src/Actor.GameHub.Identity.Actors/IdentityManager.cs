@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using Actor.GameHub.Identity.Abtractions;
+using Akka.Actor;
 
 namespace Actor.GameHub.Identity
 {

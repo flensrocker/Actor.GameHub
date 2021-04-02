@@ -1,34 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using Actor.GameHub.Identity.Abtractions;
 using Akka.Actor;
 using Akka.Event;
 
 namespace Actor.GameHub.Identity
 {
-  public interface IUserManagerMsg
-  {
-  }
-
-  public class UserLogoutMsg : IUserManagerMsg
-  {
-    public Guid UserId { get; init; }
-  }
-
-  public class UserLoginMsg : IUserManagerMsg
-  {
-    public string Username { get; init; }
-  }
-
-  public class UserLoginSuccessMsg : IUserManagerMsg
-  {
-    public Guid UserId { get; set; }
-  }
-
-  public class UserLoginErrorMsg : IUserManagerMsg
-  {
-    public string ErrorMessage { get; init; }
-  }
-
   public class UserManager : ReceiveActor
   {
     private class User
