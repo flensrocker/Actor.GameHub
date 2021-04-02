@@ -13,7 +13,7 @@ namespace Actor.GameHub.Identity.Abtractions
 
   public class UserLoginMsg : IUserManagerMsg
   {
-    public string Username { get; init; }
+    public string Username { get; init; } = null!;
   }
 
   public class UserLoginSuccessMsg : IUserManagerMsg
@@ -23,6 +23,6 @@ namespace Actor.GameHub.Identity.Abtractions
 
   public class UserLoginErrorMsg : IUserManagerMsg
   {
-    public string ErrorMessage { get; init; }
+    public string ErrorMessage { get; init; } = null!;
   }
 }

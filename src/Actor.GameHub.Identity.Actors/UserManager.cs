@@ -11,8 +11,8 @@ namespace Actor.GameHub.Identity
     private class User
     {
       public Guid UserId { get; } = Guid.NewGuid();
-      public string Username { get; init; }
-      public IActorRef UserActor { get; init; }
+      public string Username { get; init; } = null!;
+      public IActorRef UserActor { get; init; } = null!;
     }
 
     private readonly ILoggingAdapter _logger = Context.GetLogger();
@@ -56,10 +56,12 @@ namespace Actor.GameHub.Identity
 
     private void LogoutUser(UserLogoutMsg logoutMsg)
     {
-      _userIdMap.Remove(logoutMsg.UserId, out var user);
-      _usernameMap.Remove(user.Username);
+      if (_userIdMap.Remove(logoutMsg.UserId, out var user))
+      {
+        _usernameMap.Remove(user.Username);
 
-      _logger.Info($"{nameof(LogoutUser)} [{user.Username}]: {user.UserId}");
+        _logger.Info($"{nameof(LogoutUser)} [{user.Username}]: {user.UserId}");
+      }
     }
 
     public static Props Props()

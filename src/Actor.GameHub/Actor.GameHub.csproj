@@ -1,11 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Akka.Cluster" Version="1.4.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Actor.GameHub.Commands\Actor.GameHub.Commands.csproj" />
     <ProjectReference Include="..\Actor.GameHub.Identity.Actors\Actor.GameHub.Identity.Actors.csproj" />
     <ProjectReference Include="..\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj" />
   </ItemGroup>
