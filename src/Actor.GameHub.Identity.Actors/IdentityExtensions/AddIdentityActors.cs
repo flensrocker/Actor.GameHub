@@ -9,7 +9,7 @@ namespace Actor.GameHub.Identity
     public static TActorSystem AddIdentityActors<TActorSystem>(this TActorSystem actorSystem)
       where TActorSystem : IActorRefFactory
     {
-      actorSystem.ActorOf(IdentityManagerActor.Props(), IdentityMetadata.IdentityManagerName);
+      actorSystem.ActorOf(IdentityActor.Props(), IdentityMetadata.IdentityName);
 
       return actorSystem;
     }

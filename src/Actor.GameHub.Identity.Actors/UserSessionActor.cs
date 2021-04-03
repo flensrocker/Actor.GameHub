@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using Actor.GameHub.Identity.Abtractions;
 using Akka.Actor;
 using Akka.Event;
@@ -10,26 +10,42 @@ namespace Actor.GameHub.Identity.Actors
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-    private Guid? _userId;
-    private string? _username;
+    private User? _user;
+    private readonly Dictionary<IActorRef, Guid> _loginId = new();
 
     public UserSessionActor()
     {
       Receive<UserLoginSuccessMsg>(OnLoginSuccess);
+      Receive<Terminated>(OnTerminated);
     }
 
     private void OnLoginSuccess(UserLoginSuccessMsg successMsg)
     {
-      if (!_userId.HasValue)
-      {
-        _userId = successMsg.UserId;
-        _username = successMsg.Username;
-      }
-      else if (_userId.Value != successMsg.UserId)
-        throw new Exception($"UserId mismatch {_userId} != {successMsg.UserId}");
+      if (_user is null)
+        _user = successMsg.User;
+      else if (_user.UserId != successMsg.User.UserId)
+        throw new Exception($"UserId mismatch {_user.UserId} != {successMsg.User.UserId}");
 
-      Sender.Tell(successMsg);
-      _logger.Info($"{nameof(OnLoginSuccess)}: {_username} logged in with userId {_userId} from {Sender.Path}");
+      var userLogin = Context.ActorOf(UserLoginActor.Props(), IdentityMetadata.UserLoginName(successMsg.UserLoginId));
+      Context.Watch(userLogin);
+      userLogin.Tell(successMsg);
+
+      _loginId.Add(userLogin, successMsg.UserLoginId);
+
+      _logger.Info($"{nameof(OnLoginSuccess)}: {_user.Username} logged in with userId {_user.UserId} from {Sender.Path}");
+    }
+
+    private void OnTerminated(Terminated terminatedMsg)
+    {
+      if (_loginId.Remove(terminatedMsg.ActorRef))
+      {
+        if (_loginId.Count == 0)
+        {
+          Context.System.Stop(Self);
+
+          _logger.Info($"user session closed for user {_user?.Username}");
+        }
+      }
     }
 
     public static Props Props()

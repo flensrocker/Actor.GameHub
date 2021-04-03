@@ -1,6 +1,4 @@
-# Actor GameHub
-
-## Actor Model
+# Actor Model
 
 ```mermaid
 graph TD
@@ -8,8 +6,8 @@ graph TD
   Identity --> UserSessionManager
   UserSessionManager --> UserSession-UserId1
   UserSessionManager --> UserSession-UserId2
-  UserSessionManager --> UserLoader-Id1
   UserSessionManager --> UserAuthenticator-Id1
+  UserAuthenticator-Id1 --> UserLoader-Id1
   UserSession-UserId1 --> UserLogin-Id1
   UserSession-UserId1 --> UserLogin-Id2
 
@@ -20,49 +18,49 @@ graph TD
   user --> GameHub
 ```
 
-## Messages
+# Messages
 
-### Identity
+## Identity
 
-- UserLogin => UserSessionManager
+- LoginUser => UserSessionManager
 
-### UserSessionManager
+## UserSessionManager
 
-- UserLogin
-  - LoadUser -> UserLoader
-- LoadUserError
+- LoginUser
+  - AuthUser -> new UserAuthenticator
+- UserAuthError
   - UserLoginError -> Sender
-- LoadUserSuccess
-  - AuthUser -> UserAuthenticator
-- AuthUserError
-  - UserLoginError -> Sender
-- AuthUserSuccess
+- UserAuthSuccess
   - UserLoginSuccess -> UserSession-{userId}
-- SessionClose
 
-### UserLoader-{id}
-
-- LoadUser
-  - LoadUserError -> Sender => Stop
-  - LoadUserSuccess -> Sender => Stop
-
-### UserAuthenticator-{id}
+## UserAuthenticator-{id}
 
 - AuthUser
-  - AuthUserError -> Sender => Stop
-  - AuthUserSuccess -> Sender => Stop
+  - LoadUserByUsername -> new UserLoader
+- UserLoadError
+  - UserAuthError -> Parent
+- UserLoadSuccess
+  - UserAuthError -> Sender => Stop
+  - UserAuthSuccess -> Sender => Stop
 
-### UserSession-{userId}
+## UserLoader-{id}
+
+- LoadUserByUsername
+  - UserLoadError -> Sender => Stop
+  - UserLoadSuccess -> Sender => Stop
+
+## UserSession-{userId}
+
+- UserLoginSuccess -> new UserLogin
+- LogoutUser
+
+## UserLogin-{id}
 
 - UserLoginSuccess
-- UserLogout
-  - SessionClose -> Parent
+  - UserLogin -> LoginSender
+- LogoutUser => Parent
 
-### UserLogin-{id}
-
-- UserLogout => Parent
-
-### Terminal-{id}
+## Terminal-{id}
 
 - Input
   - Output

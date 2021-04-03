@@ -14,13 +14,12 @@ namespace Actor.GameHub.Commands
       Func<Task<string?>> readLineAsync,
       string gameServerAddress = "")
     {
-      var identityManager = await actorSystem
-        .ActorSelection($"{gameServerAddress}{IdentityMetadata.IdentityManagerPath}")
+      var identityRef = await actorSystem
+        .ActorSelection($"{gameServerAddress}{IdentityMetadata.IdentityPath}")
         .ResolveOne(TimeSpan.FromSeconds(5.0))
         .ConfigureAwait(false);
 
-      string? username;
-      var userId = Guid.Empty;
+      UserLoginMsg? loginSession = null;
       var run = true;
       do
       {
@@ -50,26 +49,24 @@ namespace Actor.GameHub.Commands
               run = false;
               break;
             }
-          case "logout":
+          case "logout" when loginSession is not null:
             {
-              identityManager.Tell(new UserLogoutMsg { UserId = userId });
-              username = null;
-              userId = Guid.Empty;
+              loginSession.UserLogin.Tell(new LogoutUserMsg { });
+              loginSession = null;
               break;
             }
-          case "login" when parameter is not null:
+          case "login" when loginSession is null && parameter is not null:
             {
               try
               {
-                var loginResponse = await identityManager.Ask(new UserLoginMsg { Username = parameter }, TimeSpan.FromSeconds(5.0)).ConfigureAwait(false);
+                var loginResponse = await identityRef.Ask(new LoginUserMsg { Username = parameter }, TimeSpan.FromSeconds(5.0)).ConfigureAwait(false);
 
                 switch (loginResponse)
                 {
-                  case UserLoginSuccessMsg success:
+                  case UserLoginMsg success:
                     {
-                      await writeAsync($"Logged in with userId {success.UserId}{Environment.NewLine}").ConfigureAwait(false);
-                      username = parameter;
-                      userId = success.UserId;
+                      loginSession = success;
+                      await writeAsync($"Logged in with loginId {success.UserLoginId}{Environment.NewLine}").ConfigureAwait(false);
                       break;
                     }
                   case UserLoginErrorMsg error:
@@ -97,11 +94,14 @@ namespace Actor.GameHub.Commands
             }
           default:
             {
-              await errorAsync($"Unknown command: {command} {parameter}{Environment.NewLine}").ConfigureAwait(false);
+              await errorAsync($"Unexpected command: {command} {parameter}{Environment.NewLine}").ConfigureAwait(false);
               break;
             }
         }
       } while (run);
+
+      if (loginSession is not null)
+        loginSession.UserLogin.Tell(new LogoutUserMsg { });
     }
   }
 }

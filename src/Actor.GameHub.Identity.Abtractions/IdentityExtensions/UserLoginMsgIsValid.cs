@@ -5,7 +5,7 @@ namespace Actor.GameHub.Identity
 {
   public static partial class IdentityExtensions
   {
-    public static bool IsValid(this UserLoginMsg msg)
+    public static bool IsValid(this LoginUserMsg msg)
     {
       if (msg is null || string.IsNullOrWhiteSpace(msg.Username))
         return false;
