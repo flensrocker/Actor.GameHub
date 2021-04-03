@@ -1,9 +1,10 @@
 ﻿using Actor.GameHub.Identity.Abtractions;
+using Actor.GameHub.Identity.Actors;
 using Akka.Actor;
 
-namespace Actor.GameHub.Identity.Actors
+namespace Actor.GameHub.Identity
 {
-  public static class IdentityExtensions
+  public static partial class IdentityExtensions
   {
     public static TActorSystem AddIdentityActors<TActorSystem>(this TActorSystem actorSystem)
       where TActorSystem : IActorRefFactory

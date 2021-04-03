@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using Actor.GameHub.Commands;
-using Actor.GameHub.Identity.Actors;
+using Actor.GameHub.Identity;
 using Akka.Actor;
 using Akka.Configuration;
 

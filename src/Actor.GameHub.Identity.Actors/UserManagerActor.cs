@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Actor.GameHub.Identity.Abtractions;
 using Akka.Actor;
 using Akka.Event;
@@ -8,26 +10,56 @@ namespace Actor.GameHub.Identity.Actors
 {
   public class UserManagerActor : ReceiveActor
   {
-    private class User
+    public class User
     {
       public Guid UserId { get; init; }
       public string Username { get; init; } = null!;
-      public IActorRef UserActor { get; init; } = null!;
+    }
+
+    public class UserRepository
+    {
+      private readonly IDictionary<string, User> _usernameMap;
+      private readonly IDictionary<Guid, User> _userIdMap;
+
+      public UserRepository()
+      {
+        var users = new User[]
+        {
+          new User{ UserId = Guid.Parse("163C95EC-2705-484D-8B93-DBCD586D40CA"), Username = "lars" },
+          new User{ UserId = Guid.Parse("3185B384-41E7-4CB1-BEC8-87B546B3CD20"), Username = "merten" },
+          new User{ UserId = Guid.Parse("7B8FE1BF-084B-4575-A09D-09FA5E1B8F1F"), Username = "sam" },
+          new User{ UserId = Guid.Parse("3281B126-DB29-4AD6-B7EA-FBE7FEB038A8"), Username = "uli" },
+        };
+        _usernameMap = users.ToDictionary(u => u.Username, u => u);
+        _userIdMap = users.ToDictionary(u => u.UserId, u => u);
+      }
+
+      public User? FindByUserId(Guid userId)
+      {
+        if (_userIdMap.TryGetValue(userId, out var user))
+          return user;
+
+        return null;
+      }
+
+      public User? FindByUsername(string username)
+      {
+        if (_usernameMap.TryGetValue(username, out var user))
+          return user;
+
+        return null;
+      }
     }
 
     private readonly ILoggingAdapter _logger = Context.GetLogger();
-
-    private readonly IDictionary<string, User> _usernameMap = new Dictionary<string, User>();
-    private readonly IDictionary<Guid, User> _userIdMap = new Dictionary<Guid, User>();
-    private readonly IDictionary<IActorRef, User> _userActorMap = new Dictionary<IActorRef, User>();
+    private readonly UserRepository _userRepository = new();
 
     public UserManagerActor()
     {
-      Receive<UserLoginMsg>(msg => string.IsNullOrWhiteSpace(msg.Username), msg => LoginError(msg, "username required"));
-      Receive<UserLoginMsg>(msg => _usernameMap.ContainsKey(msg.Username), msg => LoginError(msg, "username invalid"));
+      Receive<UserLoginMsg>(msg => !msg.IsValid(), msg => LoginError(msg, "username invalid"));
       Receive<UserLoginMsg>(msg => msg.Username.ToLowerInvariant() == "timeout", msg => { });
-      Receive<UserLoginMsg>(LoginUser);
-      Receive<UserLogoutMsg>(msg => _userIdMap.ContainsKey(msg.UserId), LogoutUser);
+      ReceiveAsync<UserLoginMsg>(LoginUserAsync);
+      ReceiveAsync<UserLogoutMsg>(LogoutUserAsync);
       Receive<Terminated>(OnTerminated);
     }
 
@@ -41,56 +73,73 @@ namespace Actor.GameHub.Identity.Actors
       });
     }
 
-    private void LoginUser(UserLoginMsg loginMsg)
+    private async Task<IActorRef?> UserHasSessionAsync(IUntypedActorContext context, Guid userId)
     {
-      var userAddress = Sender.Path.Address;
-      var userId = Guid.NewGuid();
-      var userRef = Context.ActorOf(
-        UserActor.Props()
-          .WithDeploy(Deploy.None.WithScope(new RemoteScope(userAddress))), $"User-{userId}");
-      Context.Watch(userRef);
-
-      var user = new User
+      try
       {
-        UserId = userId,
-        Username = loginMsg.Username,
-        UserActor = userRef,
-      };
+        return await context
+          .ActorSelection(IdentityMetadata.UserSessionName(userId))
+          .ResolveOne(TimeSpan.FromSeconds(5.0))
+          .ConfigureAwait(false);
+      }
+      catch (ActorNotFoundException)
+      {
+        return null;
+      }
+      catch
+      {
+        throw;
+      }
+    }
 
-      _usernameMap.Add(loginMsg.Username, user);
-      _userIdMap.Add(user.UserId, user);
-      _userActorMap.Add(userRef, user);
+    private async Task LoginUserAsync(UserLoginMsg loginMsg)
+    {
+      var user = _userRepository.FindByUsername(loginMsg.Username);
+      if (user is null)
+      {
+        LoginError(loginMsg, "user not found");
+        return;
+      }
+
+      var context = Context;
+      var sender = Sender;
+
+      var userRef = await UserHasSessionAsync(context, user.UserId).ConfigureAwait(false);
+      if (userRef is null)
+      {
+        var userAddress = sender.Path.Address;
+        userRef = context.ActorOf(
+          UserSessionActor.Props()
+            .WithDeploy(Deploy.None.WithScope(new RemoteScope(userAddress))), IdentityMetadata.UserSessionName(user.UserId));
+        context.Watch(userRef);
+      }
 
       var successMsg = new UserLoginSuccessMsg
       {
         UserId = user.UserId,
-        Username = loginMsg.Username,
+        Username = user.Username,
       };
-      userRef.Tell(successMsg);
-      Sender.Tell(successMsg);
+      userRef.Tell(successMsg, sender);
 
-      _logger.Info($"{nameof(LoginUser)} [{loginMsg.Username}]: {user.UserId} from {userAddress}");
+      _logger.Info($"{nameof(LoginUserAsync)} [{loginMsg.Username}]: {user.UserId} from {userRef.Path}");
     }
 
-    private void LogoutUser(UserLogoutMsg logoutMsg)
+    private async Task LogoutUserAsync(UserLogoutMsg logoutMsg)
     {
-      if (_userIdMap.TryGetValue(logoutMsg.UserId, out var user))
-      {
-        Context.Stop(user.UserActor);
+      var context = Context;
 
-        _logger.Info($"{nameof(LogoutUser)} [{user.Username}]: {user.UserId}");
+      var userRef = await UserHasSessionAsync(context, logoutMsg.UserId).ConfigureAwait(false);
+      if (userRef is not null)
+      {
+        context.Stop(userRef);
+
+        _logger.Info($"{nameof(LogoutUserAsync)}: {logoutMsg.UserId}");
       }
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
       _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg}");
-
-      if (_userActorMap.Remove(terminatedMsg.ActorRef, out var user))
-      {
-        _userIdMap.Remove(user.UserId);
-        _usernameMap.Remove(user.Username);
-      }
     }
 
     public static Props Props()

@@ -1,4 +1,6 @@
-﻿namespace Actor.GameHub.Identity.Abtractions
+﻿using System;
+
+namespace Actor.GameHub.Identity.Abtractions
 {
   public static class IdentityMetadata
   {
@@ -7,5 +9,7 @@
 
     public static readonly string UserManagerName = "UserManager";
     public static readonly string UserManagerPath = $"{IdentityManagerPath}/{UserManagerName}";
+
+    public static string UserSessionName(Guid userId) => $"Session-{userId}";
   }
 }
