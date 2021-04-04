@@ -16,15 +16,12 @@ namespace Actor.GameHub
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync("app.config"))
         : ConfigurationFactory.Default();
 
-      var gamehubSystem = ActorSystem.Create("GameHub", config);
-
-      await gamehubSystem
+      var gamehubSystem = ActorSystem
+        .Create("GameHub", config)
         .AddIdentityActors()
-        .AddTerminalActors()
-        .CommandLoopAsync(
-          msg => { Console.Write(msg); return Task.CompletedTask; },
-          msg => { Console.Error.Write(msg); return Task.CompletedTask; },
-          () => Task.FromResult(Console.ReadLine()));
+        .AddTerminalActors();
+
+      Console.ReadLine();
 
       await gamehubSystem.Terminate();
     }
