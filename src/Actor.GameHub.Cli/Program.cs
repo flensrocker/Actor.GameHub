@@ -6,6 +6,7 @@ using Actor.GameHub.Terminal;
 using Actor.GameHub.Terminal.Abstractions;
 using Actor.GameHub.Terminal.Abtractions;
 using Akka.Actor;
+using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
 
 namespace Actor.GameHub.Cli
@@ -14,8 +15,6 @@ namespace Actor.GameHub.Cli
   {
     static async Task Main(string[] args)
     {
-      var gameServerAddress = "akka.tcp://GameHub@localhost:8081";
-
       var config = File.Exists("app.config")
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync("app.config"))
         : ConfigurationFactory.Default();
@@ -34,12 +33,7 @@ namespace Actor.GameHub.Cli
         }
       } while (true);
 
-      var terminalRef = await gamehubSystem
-        .ActorSelection($"{gameServerAddress}{TerminalMetadata.TerminalPath}")
-        .ResolveOne(TimeSpan.FromSeconds(5.0))
-        .ConfigureAwait(false);
-      Console.WriteLine($"terminal endpoint found at {terminalRef.Path}");
-
+      var mediator = DistributedPubSub.Get(gamehubSystem).Mediator;
       var openTerminalMsg = new OpenTerminalMsg
       {
         LoginUser = new LoginUserMsg
@@ -47,7 +41,8 @@ namespace Actor.GameHub.Cli
           Username = username,
         },
       };
-      var response = await terminalRef.Ask(openTerminalMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
+      var sendOpen = new Send(TerminalMetadata.TerminalPath, openTerminalMsg);
+      var response = await mediator.Ask(sendOpen, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
 
       switch (response)
       {

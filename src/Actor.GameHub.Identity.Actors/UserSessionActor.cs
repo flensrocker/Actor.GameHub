@@ -15,24 +15,24 @@ namespace Actor.GameHub.Identity.Actors
 
     public UserSessionActor()
     {
-      Receive<UserLoginSuccessMsg>(OnLoginSuccess);
+      Receive<AddUserLoginMsg>(AddUserLogin);
       Receive<Terminated>(OnTerminated);
     }
 
-    private void OnLoginSuccess(UserLoginSuccessMsg successMsg)
+    private void AddUserLogin(AddUserLoginMsg addLoginMsg)
     {
       if (_user is null)
-        _user = successMsg.User;
-      else if (_user.UserId != successMsg.User.UserId)
-        throw new Exception($"UserId mismatch {_user.UserId} != {successMsg.User.UserId}");
+        _user = addLoginMsg.User;
+      else if (_user.UserId != addLoginMsg.User.UserId)
+        throw new Exception($"UserId mismatch {_user.UserId} != {addLoginMsg.User.UserId}");
 
-      var userLogin = Context.ActorOf(UserLoginActor.Props(), IdentityMetadata.UserLoginName(successMsg.UserLoginId));
+      var userLogin = Context.ActorOf(UserLoginActor.Props(), IdentityMetadata.UserLoginName(addLoginMsg.UserLoginId));
       Context.Watch(userLogin);
-      userLogin.Tell(successMsg);
+      userLogin.Tell(addLoginMsg);
 
-      _loginId.Add(userLogin, successMsg.UserLoginId);
+      _loginId.Add(userLogin, addLoginMsg.UserLoginId);
 
-      _logger.Info($"{nameof(OnLoginSuccess)}: {_user.Username} logged in with userId {_user.UserId} from {Sender.Path}");
+      _logger.Info($"{nameof(AddUserLogin)}: {_user.Username} logged in with userId {_user.UserId} from {Sender.Path}");
     }
 
     private void OnTerminated(Terminated terminatedMsg)

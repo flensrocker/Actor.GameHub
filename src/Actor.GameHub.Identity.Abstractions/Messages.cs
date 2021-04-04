@@ -17,7 +17,7 @@ namespace Actor.GameHub.Identity.Abstractions
     public string ErrorMessage { get; init; } = null!;
   }
 
-  public class UserLoginSuccessMsg
+  public class AddUserLoginMsg
   {
     public Guid UserLoginId { get; } = Guid.NewGuid();
     public IActorRef LoginSender { get; init; } = null!;
@@ -67,7 +67,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   // ----- UserLogin
 
-  public class UserLoginMsg
+  public class UserLoginSuccessMsg
   {
     public Guid UserLoginId { get; init; }
     public IActorRef UserLogin { get; init; } = null!;

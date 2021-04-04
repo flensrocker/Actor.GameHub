@@ -19,7 +19,7 @@ namespace Actor.GameHub.Terminal
         .ResolveOne(TimeSpan.FromSeconds(5.0))
         .ConfigureAwait(false);
 
-      UserLoginMsg? loginSession = null;
+      UserLoginSuccessMsg? loginSession = null;
       var run = true;
       do
       {
@@ -63,7 +63,7 @@ namespace Actor.GameHub.Terminal
 
                 switch (loginResponse)
                 {
-                  case UserLoginMsg success:
+                  case UserLoginSuccessMsg success:
                     {
                       loginSession = success;
                       await writeAsync($"Logged in with loginId {success.UserLoginId}{Environment.NewLine}").ConfigureAwait(false);

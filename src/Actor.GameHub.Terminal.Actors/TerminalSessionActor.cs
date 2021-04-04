@@ -2,6 +2,7 @@
 using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
+using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Event;
 
 namespace Actor.GameHub.Terminal
@@ -12,7 +13,7 @@ namespace Actor.GameHub.Terminal
 
     private Guid _terminalId;
     private IActorRef? _terminalOutput;
-    private UserLoginSuccessMsg? _loginSuccess;
+    private UserLoginSuccessMsg? _userLogin;
 
     public TerminalSessionActor()
     {
@@ -22,13 +23,14 @@ namespace Actor.GameHub.Terminal
       Receive<UserLoginSuccessMsg>(LoginSuccess);
       Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
       Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
+      Receive<Terminated>(OnTerminated);
 
       _logger.Info("==> Terminal-Session started");
     }
 
     private void Login(LoginTerminalMsg loginMsg)
     {
-      if (_terminalOutput is not null || _loginSuccess is not null)
+      if (_terminalOutput is not null || _userLogin is not null)
         return;
 
       _terminalId = loginMsg.TerminalId;
@@ -36,14 +38,14 @@ namespace Actor.GameHub.Terminal
 
       _logger.Info($"[Terminal {_terminalId}] login for {loginMsg.LoginUser.Username} from {_terminalOutput.Path}");
 
-      Context.System
-        .ActorSelection(IdentityMetadata.IdentityPath)
-        .Tell(loginMsg.LoginUser, Self);
+      var mediator = DistributedPubSub.Get(Context.System).Mediator;
+      var sendLoginUser = new Send(IdentityMetadata.IdentityPath, loginMsg.LoginUser);
+      mediator.Tell(sendLoginUser, Self);
     }
 
     private void LoginError(UserLoginErrorMsg loginErrorMsg)
     {
-      if (_terminalOutput is null || _loginSuccess is not null)
+      if (_terminalOutput is null || _userLogin is not null)
         return;
 
       _logger.Error($"[Terminal {_terminalId}] login error {loginErrorMsg.ErrorMessage}");
@@ -52,31 +54,33 @@ namespace Actor.GameHub.Terminal
       {
         ErrorMessage = $"terminal error: {loginErrorMsg.ErrorMessage}",
       };
-      _terminalOutput.Tell(terminalErrorMsg);
+      _terminalOutput.Tell(terminalErrorMsg, Self);
 
       Context.System.Stop(Self);
     }
 
     private void LoginSuccess(UserLoginSuccessMsg loginSuccessMsg)
     {
-      if (_terminalOutput is null || _loginSuccess is not null)
+      if (_terminalOutput is null || _userLogin is not null)
         return;
 
-      _loginSuccess = loginSuccessMsg;
+      _logger.Info($"[Terminal {_terminalId}] user login, send to {_terminalOutput!.Path}");
 
-      _logger.Info($"[Terminal {_terminalId}] login success");
+      _userLogin = loginSuccessMsg;
+
+      Context.Watch(_userLogin.UserLogin);
 
       var terminalSuccessMsg = new TerminalOpenSuccessMsg
       {
         TerminalId = _terminalId,
         TerminalRef = Self,
       };
-      _terminalOutput.Tell(terminalSuccessMsg);
+      _terminalOutput.Tell(terminalSuccessMsg, Self);
     }
 
     private void Input(InputTerminalMsg inputMsg)
     {
-      if (_loginSuccess is null)
+      if (_userLogin is null)
         return;
 
       var outputMsg = new TerminalOutputMsg
@@ -89,7 +93,24 @@ namespace Actor.GameHub.Terminal
 
     private void Close(CloseTerminalMsg closeMsg)
     {
+      if (_userLogin is not null)
+      {
+        var logoutMsg = new LogoutUserMsg
+        {
+        };
+        _userLogin.UserLogin.Tell(logoutMsg);
+      }
+
       Context.System.Stop(Self);
+    }
+
+    private void OnTerminated(Terminated terminatedMsg)
+    {
+      if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.UserLogin)
+      {
+        _logger.Error($"UserLogin terminated, exiting");
+        Context.System.Stop(Self);
+      }
     }
 
     public static Props Props()

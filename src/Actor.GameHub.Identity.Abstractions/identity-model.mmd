@@ -1,0 +1,70 @@
+sequenceDiagram
+  participant o as Origin
+  participant id as Identity
+  participant usm as UserSessionManager
+  participant au as UserAuthenticator
+  participant lo as UserLoader
+  participant us as UserSession
+  participant ul as UserLogin
+
+  o->>id:LoginUser
+  rect rgba(160, 160, 160, .2)
+    id-->>usm:LoginUser
+    Note over usm,au:create UserAuthenticator
+    activate au
+    usm->>au:AuthUser
+    Note over au,lo:create UserLoader
+    activate lo
+    au->>lo:LoadUserByUsername
+    alt Error in Login
+      rect rgba(255, 0, 0, .2)
+        lo->>au:UserLoadError
+        Note over lo:Stop self
+        lo-->>au:Terminated
+        deactivate lo
+        au->>usm:UserAuthError
+        Note over au:Stop self
+        au-->>usm:Terminated
+        deactivate au
+        usm->>o:UserLoginError
+      end
+    else Successfull Login
+      rect rgba(0, 255, 0, .2)
+        activate au
+        activate lo
+        lo->>au:UserLoadSuccess
+        au->>usm:UserAuthSuccess
+        Note over lo:Stop self
+        deactivate lo
+        Note over au:Stop self
+        deactivate au
+        Note over usm,us:get or create UserSession
+        activate us
+        usm->>us:AddUserLogin
+        Note over us,ul:create UserLogin
+        activate ul
+        us-->>ul:AddUserLogin
+        ul->>o:UserLoginSuccess
+        opt another successfull LoginUser
+          o-->>id:LoginUser
+          id-->>usm:LoginUser
+          usm-->>us:AddUserLogin
+          Note over us,ul:create UserLogin
+          activate ul
+          us-->>ul:AddUserLogin
+          ul-->>o:UserLoginSuccess
+          o-->>ul:LogoutUser
+          Note over ul:Stop self
+          ul-->>us:Terminated
+          deactivate ul
+        end
+      end
+    end
+    o->>ul:LogoutUser
+    Note over ul:Stop self
+    ul-->>us:Terminated
+    deactivate ul
+    Note over us:Stop self if last UserLogin
+    us-->>usm:Terminated
+    deactivate us
+  end

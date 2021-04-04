@@ -8,32 +8,34 @@ namespace Actor.GameHub.Identity.Actors
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-    private UserLoginSuccessMsg? _loginSuccessMsg;
+    private AddUserLoginMsg? _userLogin;
 
     public UserLoginActor()
     {
-      Receive<UserLoginSuccessMsg>(UserLoginSuccess);
+      Receive<AddUserLoginMsg>(AddLogin);
       Receive<LogoutUserMsg>(LogoutUser);
     }
 
-    private void UserLoginSuccess(UserLoginSuccessMsg loginSuccessMsg)
+    private void AddLogin(AddUserLoginMsg addLoginMsg)
     {
-      _loginSuccessMsg = loginSuccessMsg;
-     
-      var loginMsg = new UserLoginMsg
+      _userLogin = addLoginMsg;
+
+      var loginSuccessMsg = new UserLoginSuccessMsg
       {
-        UserLoginId = loginSuccessMsg.UserLoginId,
+        UserLoginId = _userLogin.UserLoginId,
         UserLogin = Self,
-        User = loginSuccessMsg.User,
+        User = _userLogin.User,
       };
-      loginSuccessMsg.LoginSender.Tell(loginMsg);
+      _userLogin.LoginSender.Tell(loginSuccessMsg);
+
+      _logger.Info($"LoginSuccess: send to {_userLogin.LoginSender.Path}");
     }
 
     private void LogoutUser(LogoutUserMsg logoutMsg)
     {
       Context.System.Stop(Self);
 
-      _logger.Info($"user logged out from loginId {_loginSuccessMsg?.UserLoginId}");
+      _logger.Info($"user logged out from loginId {_userLogin?.UserLoginId}");
     }
 
     public static Props Props()

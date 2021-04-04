@@ -76,7 +76,7 @@ namespace Actor.GameHub.Identity.Actors
     {
       if (_loginSenderByAuthId.Remove(authSuccessMsg.AuthId, out var data))
       {
-        var loginSuccessMsg = new UserLoginSuccessMsg
+        var loginSuccessMsg = new AddUserLoginMsg
         {
           LoginSender = data.Sender,
           User = authSuccessMsg.User,

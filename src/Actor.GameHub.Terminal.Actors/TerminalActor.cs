@@ -1,5 +1,4 @@
-﻿using System;
-using Actor.GameHub.Terminal.Abstractions;
+﻿using Actor.GameHub.Terminal.Abstractions;
 using Actor.GameHub.Terminal.Abtractions;
 using Akka.Actor;
 using Akka.Event;
@@ -33,7 +32,7 @@ namespace Actor.GameHub.Terminal
         TerminalMetadata.TerminalSessionName(loginMsg.TerminalId));
       Context.Watch(terminalSession);
 
-      terminalSession.Forward(loginMsg);
+      terminalSession.Tell(loginMsg, Sender);
     }
 
     private void OnTerminated(Terminated terminatedMsg)

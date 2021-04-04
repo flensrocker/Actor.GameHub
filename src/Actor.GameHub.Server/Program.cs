@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Actor.GameHub.Terminal;
 using Actor.GameHub.Identity;
+using Actor.GameHub.Terminal;
 using Akka.Actor;
 using Akka.Configuration;
 
