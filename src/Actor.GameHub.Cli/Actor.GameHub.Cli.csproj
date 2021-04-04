@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Actor.GameHub.Commands\Actor.GameHub.Commands.csproj" />
     <ProjectReference Include="..\Actor.GameHub.Identity.Actors\Actor.GameHub.Identity.Actors.csproj" />
+    <ProjectReference Include="..\Actor.GameHub.Terminal.Actors\Actor.GameHub.Terminal.Actors.csproj" />
   </ItemGroup>
 
 </Project>

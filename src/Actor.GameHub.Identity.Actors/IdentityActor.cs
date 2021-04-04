@@ -1,10 +1,13 @@
-﻿using Actor.GameHub.Identity.Abtractions;
+﻿using Actor.GameHub.Identity.Abstractions;
 using Akka.Actor;
+using Akka.Event;
 
 namespace Actor.GameHub.Identity.Actors
 {
   public class IdentityActor : ReceiveActor
   {
+    private readonly ILoggingAdapter _logger = Context.GetLogger();
+
     private readonly IActorRef _userSessionManager;
 
     public IdentityActor()
@@ -12,6 +15,8 @@ namespace Actor.GameHub.Identity.Actors
       _userSessionManager = Context.ActorOf(UserSessionManagerActor.Props(), IdentityMetadata.UserSessionManagerName);
 
       Receive<LoginUserMsg>(msg => _userSessionManager.Forward(msg));
+
+      _logger.Info("==> Identity started");
     }
 
     public static Props Props()

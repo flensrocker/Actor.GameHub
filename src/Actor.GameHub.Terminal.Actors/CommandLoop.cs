@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Actor.GameHub.Identity.Abtractions;
+using Actor.GameHub.Identity.Abstractions;
 using Akka.Actor;
 
-namespace Actor.GameHub.Commands
+namespace Actor.GameHub.Terminal
 {
   public static partial class CommandsExtrensions
   {

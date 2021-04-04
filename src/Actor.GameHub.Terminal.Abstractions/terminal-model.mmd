@@ -1,0 +1,34 @@
+sequenceDiagram
+  participant o as Outside
+  participant t as Terminal
+  participant ts as TerminalSession
+  participant id as Identity
+
+  o->>t:OpenTerminal
+  rect rgba(160, 160, 160, .2)
+    Note right of t:create TerminalSession with TerminalId
+    activate ts
+    t->>ts:LoginTerminal with LoginUser
+    ts->>id:LoginUser
+    alt Error in Login
+      rect rgba(255, 0, 0, .2)
+        id->>ts:UserLoginError
+        ts->>o:TerminalOpenError
+        Note over ts:Stop self
+        deactivate ts
+      end
+    else Successfull Login
+      rect rgba(0, 255, 0, .2)
+        activate ts
+        id->>ts:UserLoginSuccess
+        ts->>o:TerminalOpenSuccess
+        loop I/O
+          o->>ts:InputTerminal
+          ts->>o:TerminalOutput
+        end
+        o->>ts:CloseTerminal
+      end
+    end
+    Note over ts:Stop self
+    deactivate ts
+  end

@@ -1,23 +1,3 @@
-# Actor Model
-
-```mermaid
-graph TD
-  user --> Identity
-  Identity --> UserSessionManager
-  UserSessionManager --> UserSession-UserId1
-  UserSessionManager --> UserSession-UserId2
-  UserSessionManager --> UserAuthenticator-Id1
-  UserAuthenticator-Id1 --> UserLoader-Id1
-  UserSession-UserId1 --> UserLogin-Id1
-  UserSession-UserId1 --> UserLogin-Id2
-
-  user --> TerminalManager
-  TerminalManager --> Terminal-Id1
-  TerminalManager --> Terminal-Id2
-
-  user --> GameHub
-```
-
 # Messages
 
 ## Identity
@@ -60,7 +40,19 @@ graph TD
   - UserLogin -> LoginSender
 - LogoutUser => Parent
 
-## Terminal-{id}
+## Terminal
 
-- Input
-  - Output
+- OpenTerminal
+  - LoginTerminal -> new TerminalSession
+
+## TerminalSession-{id}
+
+- LoginTerminal
+  - LoginUser
+- UserLoginError
+  - TerminalAddError => Stop
+- UserLoginSuccess
+  - TerminalAddSuccess
+- InputTerminal
+  - TerminalOutput
+- CloseTerminal => Stop

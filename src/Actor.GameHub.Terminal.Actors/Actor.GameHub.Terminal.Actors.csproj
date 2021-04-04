@@ -11,7 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Actor.GameHub.Identity.Abtractions\Actor.GameHub.Identity.Abtractions.csproj" />
+    <ProjectReference Include="..\Actor.GameHub.Identity.Abstractions\Actor.GameHub.Identity.Abstractions.csproj" />
+    <ProjectReference Include="..\Actor.GameHub.Terminal.Abstractions\Actor.GameHub.Terminal.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

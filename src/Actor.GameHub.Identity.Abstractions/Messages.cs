@@ -1,7 +1,7 @@
 ﻿using System;
 using Akka.Actor;
 
-namespace Actor.GameHub.Identity.Abtractions
+namespace Actor.GameHub.Identity.Abstractions
 {
   // ----- UserSessionManager
 

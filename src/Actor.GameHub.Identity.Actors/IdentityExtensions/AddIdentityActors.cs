@@ -1,4 +1,4 @@
-﻿using Actor.GameHub.Identity.Abtractions;
+﻿using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Identity.Actors;
 using Akka.Actor;
 

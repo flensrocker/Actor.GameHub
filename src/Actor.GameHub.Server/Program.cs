@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Actor.GameHub.Commands;
+using Actor.GameHub.Terminal;
 using Actor.GameHub.Identity;
 using Akka.Actor;
 using Akka.Configuration;
@@ -20,6 +20,7 @@ namespace Actor.GameHub
 
       await gamehubSystem
         .AddIdentityActors()
+        .AddTerminalActors()
         .CommandLoopAsync(
           msg => { Console.Write(msg); return Task.CompletedTask; },
           msg => { Console.Error.Write(msg); return Task.CompletedTask; },

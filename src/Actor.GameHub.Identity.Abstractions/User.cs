@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Actor.GameHub.Identity.Abtractions
+namespace Actor.GameHub.Identity.Abstractions
 {
   public class User
   {

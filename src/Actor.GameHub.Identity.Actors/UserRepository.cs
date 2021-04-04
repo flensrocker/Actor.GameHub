@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Actor.GameHub.Identity.Abtractions;
+using Actor.GameHub.Identity.Abstractions;
 
 namespace Actor.GameHub.Identity.Actors
 {

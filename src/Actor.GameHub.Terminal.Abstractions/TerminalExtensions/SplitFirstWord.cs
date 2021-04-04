@@ -1,6 +1,6 @@
-﻿namespace Actor.GameHub.Commands
+﻿namespace Actor.GameHub.Terminal
 {
-  public static partial class CommandsExtensions
+  public static partial class TerminalExtensions
   {
     public static string? SplitFirstWord(this string? words, out string? rest)
     {
