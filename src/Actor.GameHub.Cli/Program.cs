@@ -82,6 +82,8 @@ namespace Actor.GameHub.Cli
                       response = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
                       if (response is TerminalOutputMsg output)
                         Console.WriteLine(output.Output);
+                      else if (response is InputErrorMsg error)
+                        Console.Error.WriteLine($"[ERROR] {error.ErrorMessage}");
                     }
                     catch (Exception ex)
                     {

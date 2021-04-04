@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Terminal.Abstractions;
+using Actor.GameHub.Terminal.Abtractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Event;
@@ -14,6 +16,7 @@ namespace Actor.GameHub.Terminal
     private Guid _terminalId;
     private IActorRef? _terminalOutput;
     private UserLoginSuccessMsg? _userLogin;
+    private readonly Dictionary<IActorRef, ExecuteCommandMsg> _commands = new();
 
     public TerminalSessionActor()
     {
@@ -22,6 +25,7 @@ namespace Actor.GameHub.Terminal
       Receive<UserLoginErrorMsg>(LoginError);
       Receive<UserLoginSuccessMsg>(LoginSuccess);
       Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
+      Receive<CommandOutputMsg>(CommandOutput);
       Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
       Receive<Terminated>(OnTerminated);
 
@@ -83,12 +87,28 @@ namespace Actor.GameHub.Terminal
       if (_userLogin is null)
         return;
 
-      var outputMsg = new TerminalOutputMsg
+      var commandMsg = new ExecuteCommandMsg
       {
-        TerminalId = _terminalId,
-        Output = $"{inputMsg.Command} {inputMsg.Parameter}",
+        Command = inputMsg,
+        OutputTarget = Sender,
       };
-      Sender.Tell(outputMsg);
+      var commandExe = Context.ActorOf(TerminalCommandExeActor.Props(), TerminalMetadata.TerminalCommandExeName(commandMsg.CommandId));
+      _commands.Add(commandExe, commandMsg);
+      commandExe.Tell(commandMsg);
+      Context.Watch(commandExe);
+    }
+
+    private void CommandOutput(CommandOutputMsg cmdOutputMsg)
+    {
+      if (_commands.Remove(Sender))
+      {
+        var outputMsg = new TerminalOutputMsg
+        {
+          TerminalId = cmdOutputMsg.Command.Command.TerminalId,
+          Output = cmdOutputMsg.Output,
+        };
+        cmdOutputMsg.Command.OutputTarget.Tell(outputMsg);
+      }
     }
 
     private void Close(CloseTerminalMsg closeMsg)
@@ -106,7 +126,16 @@ namespace Actor.GameHub.Terminal
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.UserLogin)
+      if (_commands.Remove(terminatedMsg.ActorRef, out var command))
+      {
+        var errorMsg = new InputErrorMsg
+        {
+          TerminalId = command.Command.TerminalId,
+          ErrorMessage = $"unexpected error on command {command.Command.Command} {command.Command.Parameter}",
+        };
+        command.OutputTarget.Tell(errorMsg);
+      }
+      else if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.UserLogin)
       {
         _logger.Error($"UserLogin terminated, exiting");
         Context.System.Stop(Self);
