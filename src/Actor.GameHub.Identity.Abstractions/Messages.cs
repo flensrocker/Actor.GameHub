@@ -20,7 +20,7 @@ namespace Actor.GameHub.Identity.Abstractions
   public class AddUserLoginMsg
   {
     public Guid UserLoginId { get; } = Guid.NewGuid();
-    public IActorRef LoginSender { get; init; } = null!;
+    public IActorRef LoginOrigin { get; init; } = null!;
     public User User { get; init; } = null!;
   }
 
@@ -70,7 +70,7 @@ namespace Actor.GameHub.Identity.Abstractions
   public class UserLoginSuccessMsg
   {
     public Guid UserLoginId { get; init; }
-    public IActorRef UserLogin { get; init; } = null!;
+    public IActorRef ShellRef { get; init; } = null!;
     public User User { get; init; } = null!;
   }
 

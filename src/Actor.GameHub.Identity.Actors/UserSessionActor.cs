@@ -26,11 +26,11 @@ namespace Actor.GameHub.Identity.Actors
       else if (_user.UserId != addLoginMsg.User.UserId)
         throw new Exception($"UserId mismatch {_user.UserId} != {addLoginMsg.User.UserId}");
 
-      var userLogin = Context.ActorOf(ShellActor.Props(), IdentityMetadata.ShellName(addLoginMsg.UserLoginId));
-      Context.Watch(userLogin);
-      userLogin.Tell(addLoginMsg);
+      var shell = Context.ActorOf(ShellActor.Props(), IdentityMetadata.ShellName(addLoginMsg.UserLoginId));
+      Context.Watch(shell);
+      shell.Tell(addLoginMsg);
 
-      _loginId.Add(userLogin, addLoginMsg.UserLoginId);
+      _loginId.Add(shell, addLoginMsg.UserLoginId);
 
       _logger.Info($"{nameof(AddUserLogin)}: {_user.Username} logged in with userId {_user.UserId} from {Sender.Path}");
     }

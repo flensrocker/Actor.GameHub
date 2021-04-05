@@ -14,7 +14,7 @@ namespace Actor.GameHub.Identity.Actors
     {
       _userSessionManager = Context.ActorOf(UserSessionManagerActor.Props(), IdentityMetadata.UserSessionManagerName);
 
-      Receive<LoginUserMsg>(msg => _userSessionManager.Forward(msg));
+      Receive<LoginUserMsg>(_userSessionManager.Forward);
 
       _logger.Info("==> Identity started");
     }

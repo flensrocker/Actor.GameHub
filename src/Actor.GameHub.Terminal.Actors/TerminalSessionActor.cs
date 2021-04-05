@@ -14,7 +14,7 @@ namespace Actor.GameHub.Terminal
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private Guid _terminalId;
-    private IActorRef? _terminalOutput;
+    private IActorRef? _terminalOrigin;
     private UserLoginSuccessMsg? _userLogin;
     private readonly Dictionary<IActorRef, ExecuteCommandMsg> _commands = new();
 
@@ -34,13 +34,13 @@ namespace Actor.GameHub.Terminal
 
     private void Login(LoginTerminalMsg loginMsg)
     {
-      if (_terminalOutput is not null || _userLogin is not null)
+      if (_terminalOrigin is not null || _userLogin is not null)
         return;
 
       _terminalId = loginMsg.TerminalId;
-      _terminalOutput = Sender;
+      _terminalOrigin = Sender;
 
-      _logger.Info($"[Terminal {_terminalId}] login for {loginMsg.LoginUser.Username} from {_terminalOutput.Path}");
+      _logger.Info($"[Terminal {_terminalId}] login for {loginMsg.LoginUser.Username} from {_terminalOrigin.Path}");
 
       var mediator = DistributedPubSub.Get(Context.System).Mediator;
       var sendLoginUser = new Send(IdentityMetadata.IdentityPath, loginMsg.LoginUser);
@@ -49,7 +49,7 @@ namespace Actor.GameHub.Terminal
 
     private void LoginError(UserLoginErrorMsg loginErrorMsg)
     {
-      if (_terminalOutput is null || _userLogin is not null)
+      if (_terminalOrigin is null || _userLogin is not null)
         return;
 
       _logger.Error($"[Terminal {_terminalId}] login error {loginErrorMsg.ErrorMessage}");
@@ -58,28 +58,28 @@ namespace Actor.GameHub.Terminal
       {
         ErrorMessage = $"terminal error: {loginErrorMsg.ErrorMessage}",
       };
-      _terminalOutput.Tell(terminalErrorMsg, Self);
+      _terminalOrigin.Tell(terminalErrorMsg, Self);
 
       Context.System.Stop(Self);
     }
 
     private void LoginSuccess(UserLoginSuccessMsg loginSuccessMsg)
     {
-      if (_terminalOutput is null || _userLogin is not null)
+      if (_terminalOrigin is null || _userLogin is not null)
         return;
 
-      _logger.Info($"[Terminal {_terminalId}] user login, send to {_terminalOutput!.Path}");
+      _logger.Info($"[Terminal {_terminalId}] user login, send to {_terminalOrigin!.Path}");
 
       _userLogin = loginSuccessMsg;
 
-      Context.Watch(_userLogin.UserLogin);
+      Context.Watch(_userLogin.ShellRef);
 
       var terminalSuccessMsg = new TerminalOpenSuccessMsg
       {
         TerminalId = _terminalId,
         TerminalRef = Self,
       };
-      _terminalOutput.Tell(terminalSuccessMsg, Self);
+      _terminalOrigin.Tell(terminalSuccessMsg, Self);
     }
 
     private void Input(InputTerminalMsg inputMsg)
@@ -118,7 +118,7 @@ namespace Actor.GameHub.Terminal
         var logoutMsg = new LogoutUserMsg
         {
         };
-        _userLogin.UserLogin.Tell(logoutMsg);
+        _userLogin.ShellRef.Tell(logoutMsg);
       }
 
       Context.System.Stop(Self);
@@ -135,7 +135,7 @@ namespace Actor.GameHub.Terminal
         };
         command.OutputTarget.Tell(errorMsg);
       }
-      else if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.UserLogin)
+      else if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.ShellRef)
       {
         _logger.Error($"UserLogin terminated, exiting");
         Context.System.Stop(Self);

@@ -10,8 +10,8 @@ namespace Actor.GameHub.Identity.Actors
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-    private readonly Dictionary<Guid, (LoginUserMsg LoginMsg, IActorRef Sender)> _loginSenderByAuthId = new();
-    private readonly Dictionary<IActorRef, Guid> _authIdByUserAuthenticater = new();
+    private readonly Dictionary<Guid, (LoginUserMsg LoginMsg, IActorRef LoginOrigin)> _loginOriginByAuthId = new();
+    private readonly Dictionary<IActorRef, Guid> _authIdByUserAuthenticator = new();
 
     public UserSessionManagerActor()
     {
@@ -40,13 +40,13 @@ namespace Actor.GameHub.Identity.Actors
         LoginUserMsg = loginMsg,
       };
 
-      if (_loginSenderByAuthId.TryAdd(authUserMsg.AuthId, (loginMsg, Sender)))
+      if (_loginOriginByAuthId.TryAdd(authUserMsg.AuthId, (loginMsg, Sender)))
       {
         var userAuthenticator = Context.ActorOf(UserAuthenticatorActor.Props(), IdentityMetadata.UserAuthenticatorName(authUserMsg.AuthId));
         Context.Watch(userAuthenticator);
         userAuthenticator.Tell(authUserMsg);
 
-        _authIdByUserAuthenticater.Add(userAuthenticator, authUserMsg.AuthId);
+        _authIdByUserAuthenticator.Add(userAuthenticator, authUserMsg.AuthId);
       }
       else
       {
@@ -60,25 +60,25 @@ namespace Actor.GameHub.Identity.Actors
 
     private void UserAuthError(UserAuthErrorMsg authErrorMsg)
     {
-      if (_loginSenderByAuthId.Remove(authErrorMsg.AuthId, out var data))
+      if (_loginOriginByAuthId.Remove(authErrorMsg.AuthId, out var data))
       {
         var loginErrorMsg = new UserLoginErrorMsg
         {
           ErrorMessage = $"user auth error: {authErrorMsg.ErrorMessage}",
         };
-        data.Sender.Tell(loginErrorMsg);
+        data.LoginOrigin.Tell(loginErrorMsg);
 
-        _authIdByUserAuthenticater.Remove(Sender);
+        _authIdByUserAuthenticator.Remove(Sender);
       }
     }
 
     private void UserAuthSuccess(UserAuthSuccessMsg authSuccessMsg)
     {
-      if (_loginSenderByAuthId.Remove(authSuccessMsg.AuthId, out var data))
+      if (_loginOriginByAuthId.Remove(authSuccessMsg.AuthId, out var data))
       {
         var loginSuccessMsg = new AddUserLoginMsg
         {
-          LoginSender = data.Sender,
+          LoginOrigin = data.LoginOrigin,
           User = authSuccessMsg.User,
         };
 
@@ -88,20 +88,20 @@ namespace Actor.GameHub.Identity.Actors
           session = Context.ActorOf(UserSessionActor.Props(), sessionName);
         session.Tell(loginSuccessMsg);
 
-        _authIdByUserAuthenticater.Remove(Sender);
+        _authIdByUserAuthenticator.Remove(Sender);
       }
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_authIdByUserAuthenticater.Remove(terminatedMsg.ActorRef, out var authId)
-        && _loginSenderByAuthId.Remove(authId, out var data))
+      if (_authIdByUserAuthenticator.Remove(terminatedMsg.ActorRef, out var authId)
+        && _loginOriginByAuthId.Remove(authId, out var data))
       {
         var loginErrorMsg = new UserLoginErrorMsg
         {
           ErrorMessage = "user login error: unexpected",
         };
-        data.Sender.Tell(loginErrorMsg);
+        data.LoginOrigin.Tell(loginErrorMsg);
       }
 
       _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg}");

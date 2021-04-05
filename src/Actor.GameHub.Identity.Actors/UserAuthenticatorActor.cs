@@ -7,7 +7,7 @@ namespace Actor.GameHub.Identity.Actors
 {
   public class UserAuthenticatorActor : ReceiveActor
   {
-    private readonly Dictionary<Guid, (AuthUserMsg AuthMsg, IActorRef Sender)> _authSenderByLoadId = new();
+    private readonly Dictionary<Guid, (AuthUserMsg AuthMsg, IActorRef AuthOrigin)> _authOriginByLoadId = new();
     private readonly Dictionary<IActorRef, Guid> _loadIdByUserLoader = new();
 
     public UserAuthenticatorActor()
@@ -25,7 +25,7 @@ namespace Actor.GameHub.Identity.Actors
         Username = authMsg.LoginUserMsg.Username,
       };
 
-      if (_authSenderByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, Sender)))
+      if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, Sender)))
       {
         var userLoader = Context.ActorOf(UserLoaderActor.Props(), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
         Context.Watch(userLoader);
@@ -46,14 +46,14 @@ namespace Actor.GameHub.Identity.Actors
 
     private void UserLoadError(UserLoadErrorMsg loadErrorMsg)
     {
-      if (_authSenderByLoadId.Remove(loadErrorMsg.LoadId, out var data))
+      if (_authOriginByLoadId.Remove(loadErrorMsg.LoadId, out var data))
       {
         var authErrorMsg = new UserAuthErrorMsg
         {
           AuthId = data.AuthMsg.AuthId,
           ErrorMessage = $"user load error: {loadErrorMsg.ErrorMessage}",
         };
-        data.Sender.Tell(authErrorMsg);
+        data.AuthOrigin.Tell(authErrorMsg);
 
         _loadIdByUserLoader.Remove(Sender);
       }
@@ -61,14 +61,16 @@ namespace Actor.GameHub.Identity.Actors
 
     private void UserLoadSuccess(UserLoadSuccessMsg loadSuccessMsg)
     {
-      if (_authSenderByLoadId.Remove(loadSuccessMsg.LoadId, out var data))
+      if (_authOriginByLoadId.Remove(loadSuccessMsg.LoadId, out var data))
       {
+        // TODO do authentication based on password/idToken
+
         var authSuccessMsg = new UserAuthSuccessMsg
         {
           AuthId = data.AuthMsg.AuthId,
           User = loadSuccessMsg.User,
         };
-        data.Sender.Tell(authSuccessMsg);
+        data.AuthOrigin.Tell(authSuccessMsg);
 
         _loadIdByUserLoader.Remove(Sender);
       }
@@ -77,14 +79,14 @@ namespace Actor.GameHub.Identity.Actors
     private void OnTerminate(Terminated terminated)
     {
       if (_loadIdByUserLoader.Remove(terminated.ActorRef, out var loadId)
-        && _authSenderByLoadId.Remove(loadId, out var data))
+        && _authOriginByLoadId.Remove(loadId, out var data))
       {
         var authErrorMsg = new UserAuthErrorMsg
         {
           AuthId = data.AuthMsg.AuthId,
           ErrorMessage = "user load error: unexpected",
         };
-        data.Sender.Tell(authErrorMsg);
+        data.AuthOrigin.Tell(authErrorMsg);
       }
     }
 

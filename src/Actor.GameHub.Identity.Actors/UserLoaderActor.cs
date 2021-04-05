@@ -14,6 +14,8 @@ namespace Actor.GameHub.Identity.Actors
 
     private void LoadUserByUsername(LoadUserByUsernameMsg loadMsg)
     {
+      var loadOrigin = Sender;
+
       var user = _userRepository.FindByUsername(loadMsg.Username);
       object reply = user is null
         ? new UserLoadErrorMsg
@@ -27,7 +29,7 @@ namespace Actor.GameHub.Identity.Actors
           User = user,
         };
 
-      Sender.Tell(reply);
+      loadOrigin.Tell(reply);
     }
 
     public static Props Props()
