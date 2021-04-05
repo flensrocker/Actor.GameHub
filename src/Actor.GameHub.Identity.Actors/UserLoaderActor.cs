@@ -1,11 +1,14 @@
 ﻿using System.Threading.Tasks;
 using Actor.GameHub.Identity.Abstractions;
 using Akka.Actor;
+using Akka.Event;
 
 namespace Actor.GameHub.Identity.Actors
 {
   public class UserLoaderActor : ReceiveActor
   {
+    private readonly ILoggingAdapter _logger = Context.GetLogger();
+
     private readonly IIdentityRepository _identityRepository = new DummyIdentityRepository();
 
     public UserLoaderActor()
@@ -15,6 +18,8 @@ namespace Actor.GameHub.Identity.Actors
 
     private async Task LoadUserByUsernameAsync(LoadUserByUsernameForAuthMsg loadMsg)
     {
+      _logger.Info($"==> Loader {loadMsg.LoadId} started");
+
       // save Context/Sender before await
       var loadOrigin = Sender;
 

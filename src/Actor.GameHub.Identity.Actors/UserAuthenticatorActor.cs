@@ -32,6 +32,8 @@ namespace Actor.GameHub.Identity.Actors
 
     private void AuthUser(AuthUserMsg authMsg)
     {
+      _logger.Info($"==> Authenticator {authMsg.AuthId} started");
+
       var loadUserMsg = new LoadUserByUsernameForAuthMsg
       {
         Username = authMsg.LoginUserMsg.Username,
@@ -39,11 +41,13 @@ namespace Actor.GameHub.Identity.Actors
 
       if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, Sender)))
       {
+        _logger.Info($"==> Loader {loadUserMsg.LoadId} created");
+
         var userLoader = Context.ActorOf(UserLoaderActor.Props(), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
+        _loadIdByUserLoader.Add(userLoader, loadUserMsg.LoadId);
+
         Context.Watch(userLoader);
         userLoader.Tell(loadUserMsg);
-
-        _loadIdByUserLoader.Add(userLoader, loadUserMsg.LoadId);
 
         Become(ReceiveLoad);
       }
@@ -73,6 +77,7 @@ namespace Actor.GameHub.Identity.Actors
         _authOriginByLoadId.Remove(loadErrorMsg.LoadId);
         _loadIdByUserLoader.Remove(Sender);
         Context.Stop(Sender);
+        _logger.Info($"==> Loader {loadErrorMsg.LoadId} stopped");
 
         Become(ReceiveAuth);
       }
@@ -95,6 +100,7 @@ namespace Actor.GameHub.Identity.Actors
         _authOriginByLoadId.Remove(loadSuccessMsg.LoadId);
         _loadIdByUserLoader.Remove(Sender);
         Context.Stop(Sender);
+        _logger.Info($"==> Loader {loadSuccessMsg.LoadId} stopped");
 
         Become(ReceiveAuth);
       }
@@ -102,17 +108,19 @@ namespace Actor.GameHub.Identity.Actors
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_loadIdByUserLoader.TryGetValue(terminatedMsg.ActorRef, out var loadId)
+      var loaderRef = terminatedMsg.ActorRef;
+
+      if (_loadIdByUserLoader.TryGetValue(loaderRef, out var loadId)
         && _authOriginByLoadId.TryGetValue(loadId, out var data))
       {
-        _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg}");
-        _loadIdByUserLoader.Remove(terminatedMsg.ActorRef);
+        _logger.Warning($"{nameof(OnTerminated)}: unexpected stop of loader {loadId}, {loaderRef.Path}");
+        _loadIdByUserLoader.Remove(loaderRef);
         _authOriginByLoadId.Remove(loadId);
 
         var authErrorMsg = new UserAuthErrorMsg
         {
           AuthId = data.AuthMsg.AuthId,
-          ErrorMessage = "user load error: unexpected",
+          ErrorMessage = "user login error: unexpected stop of loader",
         };
         data.AuthOrigin.Tell(authErrorMsg);
 

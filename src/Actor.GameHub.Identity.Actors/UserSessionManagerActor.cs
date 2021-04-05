@@ -40,6 +40,8 @@ namespace Actor.GameHub.Identity.Actors
 
       if (_loginOriginByAuthId.TryAdd(authUserMsg.AuthId, (loginMsg, Sender)))
       {
+        _logger.Info($"==> Authenticator {authUserMsg.AuthId} created");
+
         var authenticator = Context.ActorOf(UserAuthenticatorActor.Props(), IdentityMetadata.UserAuthenticatorName(authUserMsg.AuthId));
         _authIdByAuthenticatorRef.Add(authenticator, authUserMsg.AuthId);
         Context.Watch(authenticator);
@@ -69,6 +71,7 @@ namespace Actor.GameHub.Identity.Actors
         _loginOriginByAuthId.Remove(authErrorMsg.AuthId);
         _authIdByAuthenticatorRef.Remove(Sender);
         Context.Stop(Sender);
+        _logger.Info($"==> Authenticator {authErrorMsg.AuthId} stopped");
       }
     }
 
@@ -94,23 +97,24 @@ namespace Actor.GameHub.Identity.Actors
         _loginOriginByAuthId.Remove(authSuccessMsg.AuthId);
         _authIdByAuthenticatorRef.Remove(loaderRef);
         Context.Stop(loaderRef);
+        _logger.Info($"==> Authenticator {authSuccessMsg.AuthId} stopped");
       }
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      var loaderRef = terminatedMsg.ActorRef;
+      var authRef = terminatedMsg.ActorRef;
 
-      if (_authIdByAuthenticatorRef.TryGetValue(loaderRef, out var authId)
+      if (_authIdByAuthenticatorRef.TryGetValue(authRef, out var authId)
         && _loginOriginByAuthId.TryGetValue(authId, out var data))
       {
-        _logger.Warning($"{nameof(OnTerminated)}: unexpected stop of user-loader {authId}, {loaderRef.Path}");
-        _authIdByAuthenticatorRef.Remove(loaderRef);
+        _logger.Warning($"{nameof(OnTerminated)}: unexpected stop of authenticator {authId}, {authRef.Path}");
+        _authIdByAuthenticatorRef.Remove(authRef);
         _loginOriginByAuthId.Remove(authId);
 
         var loginErrorMsg = new UserLoginErrorMsg
         {
-          ErrorMessage = "user login error, unexpected stop of user-loader",
+          ErrorMessage = "user login error, unexpected stop of authenticator",
         };
         data.LoginOrigin.Tell(loginErrorMsg);
       }

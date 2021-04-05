@@ -41,6 +41,7 @@ namespace Actor.GameHub.Identity.Actors
       };
       _userLogin.LoginOrigin.Tell(loginSuccessMsg);
       Context.Watch(_userLogin.LoginOrigin);
+      _logger.Info($"==> Watch login-origin {_userLogin.LoginOrigin.Path}");
 
       Become(ReceiveLoggedIn);
     }
@@ -49,8 +50,10 @@ namespace Actor.GameHub.Identity.Actors
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      Context.Unwatch(_userLogin.LoginOrigin);
+      _logger.Info($"==> Unwatch login-origin {_userLogin.LoginOrigin.Path}");
+      var loginOrigin = _userLogin.LoginOrigin;
       _userLogin = null;
+      Context.Unwatch(loginOrigin);
       Context.System.Stop(Self);
     }
 
@@ -58,7 +61,7 @@ namespace Actor.GameHub.Identity.Actors
     {
       if (_userLogin is not null)
       {
-        _logger.Warning($"==> login-origin {_userLogin.LoginOrigin.Path} terminated, exiting");
+        _logger.Warning($"==> login-origin {_userLogin.LoginOrigin.Path} terminated, stopping");
         Context.System.Stop(Self);
       }
     }

@@ -32,7 +32,7 @@ namespace Actor.GameHub.Terminal
         TerminalMetadata.TerminalSessionName(loginMsg.TerminalId));
       Context.Watch(terminalSession);
 
-      terminalSession.Tell(loginMsg, Sender);
+      terminalSession.Forward(loginMsg);
     }
 
     private void OnTerminated(Terminated terminatedMsg)

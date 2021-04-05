@@ -45,6 +45,8 @@ namespace Actor.GameHub.Terminal
       var mediator = DistributedPubSub.Get(Context.System).Mediator;
       var sendLoginUser = new Send(IdentityMetadata.IdentityPath, loginMsg.LoginUser);
       mediator.Tell(sendLoginUser, Self);
+
+      _logger.Info($"==> Login from {Self.Path}");
     }
 
     private void LoginError(UserLoginErrorMsg loginErrorMsg)
