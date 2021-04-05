@@ -20,22 +20,30 @@ namespace Actor.GameHub.Terminal
 
     public TerminalSessionActor()
     {
-      // TODO use Become for login/logged in state
-      Receive<LoginTerminalMsg>(Login);
-      Receive<UserLoginErrorMsg>(LoginError);
-      Receive<UserLoginSuccessMsg>(LoginSuccess);
-      Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
-      Receive<CommandOutputMsg>(CommandOutput);
-      Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
-      Receive<Terminated>(OnTerminated);
+      Become(ReceiveLogin);
 
       _logger.Info("==> Terminal-Session started");
     }
 
+    private void ReceiveLogin()
+    {
+      Receive<LoginTerminalMsg>(Login);
+      Receive<UserLoginErrorMsg>(LoginError);
+      Receive<UserLoginSuccessMsg>(LoginSuccess);
+      Receive<Terminated>(OnTerminated);
+    }
+
+    private void ReceiveInput()
+    {
+      Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
+      Receive<CommandOutputMsg>(CommandOutput);
+      Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
+      Receive<Terminated>(OnTerminated);
+    }
+
     private void Login(LoginTerminalMsg loginMsg)
     {
-      if (_terminalOrigin is not null || _userLogin is not null)
-        return;
+      System.Diagnostics.Debug.Assert(_terminalOrigin is null && _userLogin is null);
 
       _terminalId = loginMsg.TerminalId;
       _terminalOrigin = Sender;
@@ -51,8 +59,7 @@ namespace Actor.GameHub.Terminal
 
     private void LoginError(UserLoginErrorMsg loginErrorMsg)
     {
-      if (_terminalOrigin is null || _userLogin is not null)
-        return;
+      System.Diagnostics.Debug.Assert(_terminalOrigin is not null && _userLogin is null);
 
       _logger.Error($"[Terminal {_terminalId}] login error {loginErrorMsg.ErrorMessage}");
 
@@ -67,10 +74,9 @@ namespace Actor.GameHub.Terminal
 
     private void LoginSuccess(UserLoginSuccessMsg loginSuccessMsg)
     {
-      if (_terminalOrigin is null || _userLogin is not null)
-        return;
+      System.Diagnostics.Debug.Assert(_terminalOrigin is not null && _userLogin is null);
 
-      _logger.Info($"[Terminal {_terminalId}] user login, send to {_terminalOrigin!.Path}");
+      _logger.Info($"[Terminal {_terminalId}] user login, send to {_terminalOrigin.Path}");
 
       _userLogin = loginSuccessMsg;
 
@@ -82,12 +88,13 @@ namespace Actor.GameHub.Terminal
         TerminalRef = Self,
       };
       _terminalOrigin.Tell(terminalSuccessMsg, Self);
+
+      Become(ReceiveInput);
     }
 
     private void Input(InputTerminalMsg inputMsg)
     {
-      if (_userLogin is null)
-        return;
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
 
       var commandMsg = new ExecuteCommandMsg
       {
@@ -115,13 +122,12 @@ namespace Actor.GameHub.Terminal
 
     private void Close(CloseTerminalMsg closeMsg)
     {
-      if (_userLogin is not null)
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
+      var logoutMsg = new LogoutUserMsg
       {
-        var logoutMsg = new LogoutUserMsg
-        {
-        };
-        _userLogin.ShellRef.Tell(logoutMsg);
-      }
+      };
+      _userLogin.ShellRef.Tell(logoutMsg);
 
       Context.System.Stop(Self);
     }
@@ -137,7 +143,7 @@ namespace Actor.GameHub.Terminal
         };
         command.OutputTarget.Tell(errorMsg);
       }
-      else if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.ShellRef)
+      else if (terminatedMsg.ActorRef == _userLogin?.ShellRef)
       {
         _logger.Error($"UserLogin terminated, exiting");
         Context.System.Stop(Self);
