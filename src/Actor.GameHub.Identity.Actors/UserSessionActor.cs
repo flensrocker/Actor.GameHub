@@ -22,29 +22,28 @@ namespace Actor.GameHub.Identity.Actors
     private void AddUserLogin(AddUserLoginMsg addLoginMsg)
     {
       if (_user is null)
+      {
+        _logger.Info($"user session started for user {addLoginMsg.User.Username}");
         _user = addLoginMsg.User;
+      }
       else if (_user.UserId != addLoginMsg.User.UserId)
         throw new Exception($"UserId mismatch {_user.UserId} != {addLoginMsg.User.UserId}");
 
       var shell = Context.ActorOf(ShellActor.Props(), IdentityMetadata.ShellName(addLoginMsg.UserLoginId));
+      _loginId.Add(shell, addLoginMsg.UserLoginId);
       Context.Watch(shell);
       shell.Tell(addLoginMsg);
-
-      _loginId.Add(shell, addLoginMsg.UserLoginId);
 
       _logger.Info($"{nameof(AddUserLogin)}: {_user.Username} logged in with userId {_user.UserId} from {Sender.Path}");
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_loginId.Remove(terminatedMsg.ActorRef))
+      if (_loginId.Remove(terminatedMsg.ActorRef)
+        && _loginId.Count == 0)
       {
-        if (_loginId.Count == 0)
-        {
-          Context.System.Stop(Self);
-
-          _logger.Info($"user session closed for user {_user?.Username}");
-        }
+        Context.System.Stop(Self);
+        _logger.Info($"user session closed for user {_user?.Username}");
       }
     }
 

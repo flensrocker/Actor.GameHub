@@ -27,6 +27,9 @@ namespace Actor.GameHub.Identity.Actors
 
     public Task<User?> FindUserByUsernameForAuthAsync(string username, CancellationToken cancellationToken = default)
     {
+      if (username == "error")
+        throw new Exception("identity repository error");
+
       if (_usernameMap.TryGetValue(username, out var user))
         return Task.FromResult<User?>(user);
 

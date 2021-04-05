@@ -15,7 +15,16 @@ namespace Actor.GameHub.Identity.Actors
 
     public UserAuthenticatorActor()
     {
+      Become(ReceiveAuth);
+    }
+
+    private void ReceiveAuth()
+    {
       Receive<AuthUserMsg>(AuthUser);
+    }
+
+    private void ReceiveLoad()
+    {
       Receive<UserLoadErrorMsg>(UserLoadError);
       Receive<UserLoadForAuthSuccessMsg>(UserLoadSuccess);
       Receive<Terminated>(OnTerminated);
@@ -35,6 +44,8 @@ namespace Actor.GameHub.Identity.Actors
         userLoader.Tell(loadUserMsg);
 
         _loadIdByUserLoader.Add(userLoader, loadUserMsg.LoadId);
+
+        Become(ReceiveLoad);
       }
       else
       {
@@ -62,6 +73,8 @@ namespace Actor.GameHub.Identity.Actors
         _authOriginByLoadId.Remove(loadErrorMsg.LoadId);
         _loadIdByUserLoader.Remove(Sender);
         Context.Stop(Sender);
+
+        Become(ReceiveAuth);
       }
     }
 
@@ -82,6 +95,8 @@ namespace Actor.GameHub.Identity.Actors
         _authOriginByLoadId.Remove(loadSuccessMsg.LoadId);
         _loadIdByUserLoader.Remove(Sender);
         Context.Stop(Sender);
+
+        Become(ReceiveAuth);
       }
     }
 
@@ -100,6 +115,8 @@ namespace Actor.GameHub.Identity.Actors
           ErrorMessage = "user load error: unexpected",
         };
         data.AuthOrigin.Tell(authErrorMsg);
+
+        Context.System.Stop(Self);
       }
     }
 

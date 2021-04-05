@@ -1,25 +1,30 @@
 ﻿using Actor.GameHub.Identity.Abstractions;
 using Akka.Actor;
-using Akka.Event;
 
 namespace Actor.GameHub.Identity.Actors
 {
   public class ShellActor : ReceiveActor
   {
-    private readonly ILoggingAdapter _logger = Context.GetLogger();
-
     private AddUserLoginMsg? _userLogin;
 
     public ShellActor()
     {
+      Become(ReceiveLogin);
+    }
+
+    private void ReceiveLogin()
+    {
       Receive<AddUserLoginMsg>(AddLogin);
+    }
+
+    private void ReceiveLoggedIn()
+    {
       Receive<LogoutUserMsg>(LogoutUser);
     }
 
     private void AddLogin(AddUserLoginMsg addLoginMsg)
     {
-      if (_userLogin is not null)
-        return;
+      System.Diagnostics.Debug.Assert(_userLogin is null);
 
       _userLogin = addLoginMsg;
 
@@ -31,17 +36,14 @@ namespace Actor.GameHub.Identity.Actors
       };
       _userLogin.LoginOrigin.Tell(loginSuccessMsg);
 
-      _logger.Info($"LoginSuccess: send to {_userLogin.LoginOrigin.Path}");
+      Become(ReceiveLoggedIn);
     }
 
     private void LogoutUser(LogoutUserMsg logoutMsg)
     {
-      if (_userLogin is null)
-        return;
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
 
       Context.System.Stop(Self);
-
-      _logger.Info($"user logged out from loginId {_userLogin?.UserLoginId}");
     }
 
     public static Props Props()

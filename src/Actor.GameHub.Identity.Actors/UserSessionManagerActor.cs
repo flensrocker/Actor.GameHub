@@ -11,25 +11,23 @@ namespace Actor.GameHub.Identity.Actors
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private readonly Dictionary<Guid, (LoginUserMsg LoginMsg, IActorRef LoginOrigin)> _loginOriginByAuthId = new();
-    private readonly Dictionary<IActorRef, Guid> _authIdByUserAuthenticator = new();
+    private readonly Dictionary<IActorRef, Guid> _authIdByAuthenticatorRef = new();
 
     public UserSessionManagerActor()
     {
-      Receive<LoginUserMsg>(msg => !msg.IsValid(), msg => LoginError(msg, "username invalid"));
+      Receive<LoginUserMsg>(msg => !msg.IsValid(), LoginInvalid);
       Receive<LoginUserMsg>(msg => msg.Username.ToLowerInvariant() == "timeout", msg => { });
       Receive<LoginUserMsg>(LoginUser);
-      Receive<UserAuthErrorMsg>(UserAuthError);
-      Receive<UserAuthSuccessMsg>(UserAuthSuccess);
+      Receive<UserAuthErrorMsg>(AuthError);
+      Receive<UserAuthSuccessMsg>(AuthSuccess);
       Receive<Terminated>(OnTerminated);
     }
 
-    private void LoginError(LoginUserMsg loginMsg, string errorMessage)
+    private void LoginInvalid(LoginUserMsg loginMsg)
     {
-      _logger.Error($"{nameof(LoginError)} [{loginMsg.Username}]: {errorMessage}");
-
       Sender.Tell(new UserLoginErrorMsg
       {
-        ErrorMessage = errorMessage,
+        ErrorMessage = "login invalid",
       });
     }
 
@@ -42,11 +40,10 @@ namespace Actor.GameHub.Identity.Actors
 
       if (_loginOriginByAuthId.TryAdd(authUserMsg.AuthId, (loginMsg, Sender)))
       {
-        var userAuthenticator = Context.ActorOf(UserAuthenticatorActor.Props(), IdentityMetadata.UserAuthenticatorName(authUserMsg.AuthId));
-        Context.Watch(userAuthenticator);
-        userAuthenticator.Tell(authUserMsg);
-
-        _authIdByUserAuthenticator.Add(userAuthenticator, authUserMsg.AuthId);
+        var authenticator = Context.ActorOf(UserAuthenticatorActor.Props(), IdentityMetadata.UserAuthenticatorName(authUserMsg.AuthId));
+        _authIdByAuthenticatorRef.Add(authenticator, authUserMsg.AuthId);
+        Context.Watch(authenticator);
+        authenticator.Tell(authUserMsg);
       }
       else
       {
@@ -58,27 +55,29 @@ namespace Actor.GameHub.Identity.Actors
       }
     }
 
-    private void UserAuthError(UserAuthErrorMsg authErrorMsg)
+    private void AuthError(UserAuthErrorMsg authErrorMsg)
     {
       if (_loginOriginByAuthId.TryGetValue(authErrorMsg.AuthId, out var data)
-        && _authIdByUserAuthenticator.ContainsKey(Sender))
+        && _authIdByAuthenticatorRef.ContainsKey(Sender))
       {
         var loginErrorMsg = new UserLoginErrorMsg
         {
-          ErrorMessage = $"user auth error: {authErrorMsg.ErrorMessage}",
+          ErrorMessage = $"auth error: {authErrorMsg.ErrorMessage}",
         };
         data.LoginOrigin.Tell(loginErrorMsg);
 
         _loginOriginByAuthId.Remove(authErrorMsg.AuthId);
-        _authIdByUserAuthenticator.Remove(Sender);
+        _authIdByAuthenticatorRef.Remove(Sender);
         Context.Stop(Sender);
       }
     }
 
-    private void UserAuthSuccess(UserAuthSuccessMsg authSuccessMsg)
+    private void AuthSuccess(UserAuthSuccessMsg authSuccessMsg)
     {
+      var loaderRef = Sender;
+
       if (_loginOriginByAuthId.TryGetValue(authSuccessMsg.AuthId, out var data)
-        && _authIdByUserAuthenticator.ContainsKey(Sender))
+        && _authIdByAuthenticatorRef.ContainsKey(loaderRef))
       {
         var loginSuccessMsg = new AddUserLoginMsg
         {
@@ -93,23 +92,25 @@ namespace Actor.GameHub.Identity.Actors
         session.Tell(loginSuccessMsg);
 
         _loginOriginByAuthId.Remove(authSuccessMsg.AuthId);
-        _authIdByUserAuthenticator.Remove(Sender);
-        Context.Stop(Sender);
+        _authIdByAuthenticatorRef.Remove(loaderRef);
+        Context.Stop(loaderRef);
       }
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_authIdByUserAuthenticator.TryGetValue(terminatedMsg.ActorRef, out var authId)
+      var loaderRef = terminatedMsg.ActorRef;
+
+      if (_authIdByAuthenticatorRef.TryGetValue(loaderRef, out var authId)
         && _loginOriginByAuthId.TryGetValue(authId, out var data))
       {
-        _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg}");
-        _authIdByUserAuthenticator.Remove(terminatedMsg.ActorRef);
+        _logger.Warning($"{nameof(OnTerminated)}: unexpected stop of user-loader {authId}, {loaderRef.Path}");
+        _authIdByAuthenticatorRef.Remove(loaderRef);
         _loginOriginByAuthId.Remove(authId);
 
         var loginErrorMsg = new UserLoginErrorMsg
         {
-          ErrorMessage = "user login error: unexpected",
+          ErrorMessage = "user login error, unexpected stop of user-loader",
         };
         data.LoginOrigin.Tell(loginErrorMsg);
       }

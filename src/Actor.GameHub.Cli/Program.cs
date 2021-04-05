@@ -22,91 +22,120 @@ namespace Actor.GameHub.Cli
       var gamehubSystem = ActorSystem.Create("GameHub", config);
 
       var username = "";
+      object? response = null;
+      var run = true;
       do
       {
-        Console.Write("login: ");
-        username = Console.ReadLine();
-        if (!string.IsNullOrWhiteSpace(username))
+        do
         {
-          username = username.Trim();
-          break;
+          Console.Write("login: ");
+          username = Console.ReadLine();
+          if (!string.IsNullOrWhiteSpace(username))
+          {
+            username = username.Trim();
+            break;
+          }
+        } while (true);
+
+        var mediator = DistributedPubSub.Get(gamehubSystem).Mediator;
+        var openTerminalMsg = new OpenTerminalMsg
+        {
+          LoginUser = new LoginUserMsg
+          {
+            Username = username,
+          },
+        };
+        var sendOpen = new Send(TerminalMetadata.TerminalPath, openTerminalMsg);
+        try
+        {
+          response = await mediator.Ask(sendOpen, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
         }
-      } while (true);
-
-      var mediator = DistributedPubSub.Get(gamehubSystem).Mediator;
-      var openTerminalMsg = new OpenTerminalMsg
-      {
-        LoginUser = new LoginUserMsg
+        catch (Exception ex)
         {
-          Username = username,
-        },
-      };
-      var sendOpen = new Send(TerminalMetadata.TerminalPath, openTerminalMsg);
-      var response = await mediator.Ask(sendOpen, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
+          await Console.Error.WriteLineAsync($"Cannot open terminal: {ex.Message}");
+        }
 
-      switch (response)
-      {
-        case TerminalOpenSuccessMsg terminalSession:
-          {
-            Console.WriteLine($"terminal opened with terminalId {terminalSession.TerminalId}");
-
-            var run = true;
-            do
+        switch (response)
+        {
+          case null:
             {
-              Console.Write("command: ");
-              var input = Console.ReadLine();
+              Console.Error.WriteLine("no response");
+              break;
+            }
+          case TerminalOpenErrorMsg terminalErrorMsg:
+            {
+              Console.Error.WriteLine($"Terminal error: {terminalErrorMsg.ErrorMessage}");
+              break;
+            }
+          case TerminalOpenSuccessMsg terminalSession:
+            {
+              Console.WriteLine($"terminal opened with terminalId {terminalSession.TerminalId}");
 
-              var command = input.SplitFirstWord(out var parameter);
-              if (string.IsNullOrWhiteSpace(command))
-                continue;
-
-              switch (command.ToLowerInvariant())
+              var runCommand = true;
+              do
               {
-                case "exit":
-                case "quit":
-                  {
-                    run = false;
-                    terminalSession.TerminalRef.Tell(new CloseTerminalMsg { TerminalId = terminalSession.TerminalId }, ActorRefs.NoSender);
-                    break;
-                  }
-                default:
-                  {
-                    try
+                Console.Write($"[{username}]> ");
+                var input = Console.ReadLine();
+
+                var command = input.SplitFirstWord(out var parameter);
+                if (string.IsNullOrWhiteSpace(command))
+                  continue;
+
+                switch (command.ToLowerInvariant())
+                {
+                  case "quit":
                     {
-                      var inputMsg = new InputTerminalMsg
-                      {
-                        TerminalId = terminalSession.TerminalId,
-                        Command = command,
-                        Parameter = parameter,
-                      };
-                      response = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
-                      if (response is TerminalOutputMsg output)
-                        Console.WriteLine(output.Output);
-                      else if (response is InputErrorMsg error)
-                        Console.Error.WriteLine($"[ERROR] {error.ErrorMessage}");
-                    }
-                    catch (Exception ex)
-                    {
-                      Console.Error.WriteLine($"Terminal not found, exiting: {ex.Message}");
                       run = false;
+                      goto case "exit";
                     }
-                    break;
-                  }
-              }
-            } while (run);
-            break;
-          }
-        case TerminalOpenErrorMsg terminalErrorMsg:
-          {
-            Console.Error.WriteLine($"Terminal error, exiting: {terminalErrorMsg.ErrorMessage}");
-            break;
-          }
-        default:
-          {
-            Console.Error.WriteLine($"unknown response, exiting: {response}");
-            break;
-          }
-      }
+                  case "exit":
+                    {
+                      runCommand = false;
+                      terminalSession.TerminalRef.Tell(new CloseTerminalMsg { TerminalId = terminalSession.TerminalId }, ActorRefs.NoSender);
+                      break;
+                    }
+                  default:
+                    {
+                      try
+                      {
+                        var inputMsg = new InputTerminalMsg
+                        {
+                          TerminalId = terminalSession.TerminalId,
+                          Command = command,
+                          Parameter = parameter,
+                        };
+                        var commandResponse = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
+                        switch (commandResponse)
+                        {
+                          case InputErrorMsg inputError:
+                            {
+                              Console.Error.WriteLine($"[ERROR] {inputError.ErrorMessage}");
+                              break;
+                            }
+                          case TerminalOutputMsg output:
+                            {
+                              Console.WriteLine(output.Output);
+                              break;
+                            }
+                        }
+                      }
+                      catch (Exception ex)
+                      {
+                        Console.Error.WriteLine($"Terminal error: {ex.Message}");
+                      }
+                      break;
+                    }
+                }
+              } while (runCommand);
+              break;
+            }
+          default:
+            {
+              Console.Error.WriteLine($"unknown response: {response}");
+              break;
+            }
+        }
+      } while (run);
 
       await gamehubSystem.Terminate();
     }
