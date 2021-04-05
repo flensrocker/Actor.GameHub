@@ -16,7 +16,7 @@ sequenceDiagram
         id->>ts:UserLoginError
         ts->>o:TerminalOpenError
         Note over ts:Stop self
-        ts-->>t:Terminated
+        ts->>t:Terminated
         deactivate ts
       end
     else Successfull Login
@@ -36,13 +36,13 @@ sequenceDiagram
             ts->>o:InputError
           end
           Note over tce:Stop self
-          tce-->>ts:Terminated
+          tce->>ts:Terminated
           deactivate tce
         end
         o->>ts:CloseTerminal
         ts->>id:LogoutUser
         Note over ts:Stop self
-        ts-->>t:Terminated
+        ts->>t:Terminated
         deactivate ts
       end
     end

@@ -5,7 +5,7 @@ sequenceDiagram
   participant au as UserAuthenticator
   participant lo as UserLoader
   participant us as UserSession
-  participant ul as UserLogin
+  participant sh as Shell
 
   o->>id:LoginUser
   rect rgba(160, 160, 160, .2)
@@ -20,11 +20,11 @@ sequenceDiagram
       rect rgba(255, 0, 0, .2)
         lo->>au:UserLoadError
         Note over lo:Stop self
-        lo-->>au:Terminated
+        lo->>au:Terminated
         deactivate lo
         au->>usm:UserAuthError
         Note over au:Stop self
-        au-->>usm:Terminated
+        au->>usm:Terminated
         deactivate au
         usm->>o:UserLoginError
       end
@@ -41,30 +41,30 @@ sequenceDiagram
         Note over usm,us:get or create UserSession
         activate us
         usm->>us:AddUserLogin
-        Note over us,ul:create UserLogin
-        activate ul
-        us-->>ul:AddUserLogin
-        ul->>o:UserLoginSuccess
+        Note over us,sh:create UserLogin
+        activate sh
+        us-->>sh:AddUserLogin
+        sh->>o:UserLoginSuccess
         opt another successfull LoginUser
           o-->>id:LoginUser
           id-->>usm:LoginUser
           usm-->>us:AddUserLogin
-          Note over us,ul:create UserLogin
-          activate ul
-          us-->>ul:AddUserLogin
-          ul-->>o:UserLoginSuccess
-          o-->>ul:LogoutUser
-          Note over ul:Stop self
-          ul-->>us:Terminated
-          deactivate ul
+          Note over us,sh:create UserLogin
+          activate sh
+          us-->>sh:AddUserLogin
+          sh-->>o:UserLoginSuccess
+          o-->>sh:LogoutUser
+          Note over sh:Stop self
+          sh->>us:Terminated
+          deactivate sh
         end
       end
     end
-    o->>ul:LogoutUser
-    Note over ul:Stop self
-    ul-->>us:Terminated
-    deactivate ul
+    o->>sh:LogoutUser
+    Note over sh:Stop self
+    sh->>us:Terminated
+    deactivate sh
     Note over us:Stop self if last UserLogin
-    us-->>usm:Terminated
+    us->>usm:Terminated
     deactivate us
   end

@@ -4,13 +4,13 @@ using Akka.Event;
 
 namespace Actor.GameHub.Identity.Actors
 {
-  public class UserLoginActor : ReceiveActor
+  public class ShellActor : ReceiveActor
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private AddUserLoginMsg? _userLogin;
 
-    public UserLoginActor()
+    public ShellActor()
     {
       Receive<AddUserLoginMsg>(AddLogin);
       Receive<LogoutUserMsg>(LogoutUser);
@@ -40,7 +40,7 @@ namespace Actor.GameHub.Identity.Actors
 
     public static Props Props()
       => Akka.Actor.Props
-        .Create(() => new UserLoginActor())
+        .Create(() => new ShellActor())
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

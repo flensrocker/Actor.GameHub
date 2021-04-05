@@ -65,7 +65,7 @@ namespace Actor.GameHub.Identity.Abstractions
     public User User { get; init; } = null!;
   }
 
-  // ----- UserLogin
+  // ----- Shell
 
   public class UserLoginSuccessMsg
   {

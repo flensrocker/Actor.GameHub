@@ -26,7 +26,7 @@ namespace Actor.GameHub.Identity.Actors
       else if (_user.UserId != addLoginMsg.User.UserId)
         throw new Exception($"UserId mismatch {_user.UserId} != {addLoginMsg.User.UserId}");
 
-      var userLogin = Context.ActorOf(UserLoginActor.Props(), IdentityMetadata.UserLoginName(addLoginMsg.UserLoginId));
+      var userLogin = Context.ActorOf(ShellActor.Props(), IdentityMetadata.ShellName(addLoginMsg.UserLoginId));
       Context.Watch(userLogin);
       userLogin.Tell(addLoginMsg);
 
