@@ -13,5 +13,6 @@ namespace Actor.GameHub.Identity.Abstractions
     public static string UserAuthenticatorName(Guid authId) => $"UserAuthenticator-{authId}";
     public static string UserSessionName(Guid userId) => $"UserSession-{userId}";
     public static string ShellName(Guid loginId) => $"Shell-{loginId}";
+    public static string ShellCommandName(Guid commandId) => $"ShellCommand-{commandId}";
   }
 }

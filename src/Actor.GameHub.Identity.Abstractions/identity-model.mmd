@@ -6,6 +6,7 @@ sequenceDiagram
   participant lo as UserLoader
   participant us as UserSession
   participant sh as Shell
+  participant sc as ShellCommand
 
   o->>id:LoginUser
   rect rgba(160, 160, 160, .2)
@@ -23,10 +24,10 @@ sequenceDiagram
         au->>lo:Stop
         lo->>au:Terminated
         deactivate lo
+        usm->>o:UserLoginError
         usm->>au:Stop
         au->>usm:Terminated
         deactivate au
-        usm->>o:UserLoginError
       end
     else Successfull Login
       rect rgba(0, 255, 0, .2)
@@ -47,10 +48,25 @@ sequenceDiagram
         activate sh
         us-->>sh:AddUserLogin
         sh->>o:UserLoginSuccess
+        o->>sh:InputCommand
+        Note over sh,sc:create ShellCommand
+        activate sc
+        sh->>sc:ExecuteCommand
+        alt valid command
+          sc->>sh:CommandSuccess
+          sh->>o:InputSuccess
+          sh->>sc:Stop
+        else invalid command
+          sc->>sh:CommandError
+          sh->>o:InputError
+          sh->>sc:Stop
+          sc->>sh:Terminated
+          deactivate sc
+        end
         opt another successfull LoginUser
           o-->>id:LoginUser
           id-->>usm:LoginUser
-          Note over usm,us:successfull UserAuth, get UserSession
+          Note over usm,us:successfull UserAuth, get or create UserSession
           usm-->>us:AddUserLogin
           Note over us,sh:create UserLogin
           activate sh

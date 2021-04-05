@@ -2,8 +2,8 @@ sequenceDiagram
   participant o as Origin
   participant t as Terminal
   participant ts as TerminalSession
-  participant tce as TerminalCommandExe
   participant id as Identity
+  participant sh as Shell
 
   o->>t:OpenTerminal
   rect rgba(160, 160, 160, .2)
@@ -26,21 +26,17 @@ sequenceDiagram
         ts->>o:TerminalOpenSuccess
         loop I/O
           o->>ts:InputTerminal
-          Note over ts,tce:create TerminalCommandExe
-          activate tce
-          ts->>tce:ExecuteCommand
-          alt Command successfull
-            tce->>ts:CommandOutput
-            ts->>o:TerminalOutput
-          else Command error
-            ts->>o:InputError
+          ts->>sh:InputCommand
+          alt valid command
+            sh->>ts:InputSuccess
+            ts->>o:TerminalSuccess
+          else invalid command
+            sh->>ts:InputError
+            ts->>o:TerminalError
           end
-          Note over tce:Stop self
-          tce->>ts:Terminated
-          deactivate tce
         end
         o->>ts:CloseTerminal
-        ts->>id:LogoutUser
+        ts->>sh:LogoutUser
         Note over ts:Stop self
         ts->>t:Terminated
         deactivate ts

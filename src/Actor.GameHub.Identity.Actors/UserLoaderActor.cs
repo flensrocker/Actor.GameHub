@@ -18,8 +18,6 @@ namespace Actor.GameHub.Identity.Actors
 
     private async Task LoadUserByUsernameAsync(LoadUserByUsernameForAuthMsg loadMsg)
     {
-      _logger.Info($"==> Loader {loadMsg.LoadId} started");
-
       // save Context/Sender before await
       var loadOrigin = Sender;
 

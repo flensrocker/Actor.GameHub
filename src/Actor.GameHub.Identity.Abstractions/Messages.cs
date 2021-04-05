@@ -19,7 +19,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   public class AddUserLoginMsg
   {
-    public Guid UserLoginId { get; } = Guid.NewGuid();
+    public Guid UserLoginId { get; init; }
     public IActorRef LoginOrigin { get; init; } = null!;
     public User User { get; init; } = null!;
   }
@@ -28,7 +28,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   public class AuthUserMsg
   {
-    public Guid AuthId { get; } = Guid.NewGuid();
+    public Guid AuthId { get; init; }
     public LoginUserMsg LoginUserMsg { get; init; } = null!;
   }
 
@@ -49,7 +49,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   public class LoadUserByUsernameForAuthMsg
   {
-    public Guid LoadId { get; } = Guid.NewGuid();
+    public Guid LoadId { get; init; }
     public string Username { get; init; } = null!;
   }
 
@@ -74,7 +74,46 @@ namespace Actor.GameHub.Identity.Abstractions
     public User User { get; init; } = null!;
   }
 
+  public class InputCommandMsg
+  {
+    public Guid InputCommandId { get; init; }
+    public string Command { get; init; } = null!;
+    public string? Parameter { get; init; }
+  }
+
+  public class InputErrorMsg
+  {
+    public Guid InputCommandId { get; init; }
+    public string ErrorMessage { get; init; } = null!;
+  }
+
+  public class InputSuccessMsg
+  {
+    public Guid InputCommandId { get; init; }
+    public string Output { get; init; } = null!;
+  }
+
   public class LogoutUserMsg
   {
+  }
+
+  // ----- ShellCommand
+
+  public class ExecuteCommandMsg
+  {
+    public Guid CommandId { get; init; }
+    public InputCommandMsg Input { get; init; } = null!;
+  }
+
+  public class CommandErrorMsg
+  {
+    public Guid CommandId { get; init; }
+    public string ErrorMessage { get; init; } = null!;
+  }
+
+  public class CommandSuccessMsg
+  {
+    public Guid CommandId { get; init; }
+    public string Output { get; init; } = null!;
   }
 }

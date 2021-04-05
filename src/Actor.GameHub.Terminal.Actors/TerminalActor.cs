@@ -1,5 +1,5 @@
-﻿using Actor.GameHub.Terminal.Abstractions;
-using Actor.GameHub.Terminal.Abtractions;
+﻿using System;
+using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
 using Akka.Event;
 
@@ -19,10 +19,9 @@ namespace Actor.GameHub.Terminal
 
     private void Open(OpenTerminalMsg addMsg)
     {
-      _logger.Info($"open terminal from sender {Sender.Path}");
-
       var loginMsg = new LoginTerminalMsg
       {
+        TerminalId = Guid.NewGuid(),
         LoginUser = addMsg.LoginUser,
       };
 

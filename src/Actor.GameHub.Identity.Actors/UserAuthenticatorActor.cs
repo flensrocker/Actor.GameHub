@@ -32,17 +32,14 @@ namespace Actor.GameHub.Identity.Actors
 
     private void AuthUser(AuthUserMsg authMsg)
     {
-      _logger.Info($"==> Authenticator {authMsg.AuthId} started");
-
       var loadUserMsg = new LoadUserByUsernameForAuthMsg
       {
+        LoadId = Guid.NewGuid(),
         Username = authMsg.LoginUserMsg.Username,
       };
 
       if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, Sender)))
       {
-        _logger.Info($"==> Loader {loadUserMsg.LoadId} created");
-
         var userLoader = Context.ActorOf(UserLoaderActor.Props(), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
         _loadIdByUserLoader.Add(userLoader, loadUserMsg.LoadId);
 
@@ -77,9 +74,6 @@ namespace Actor.GameHub.Identity.Actors
         _authOriginByLoadId.Remove(loadErrorMsg.LoadId);
         _loadIdByUserLoader.Remove(Sender);
         Context.Stop(Sender);
-        _logger.Info($"==> Loader {loadErrorMsg.LoadId} stopped");
-
-        Become(ReceiveAuth);
       }
     }
 
@@ -100,9 +94,6 @@ namespace Actor.GameHub.Identity.Actors
         _authOriginByLoadId.Remove(loadSuccessMsg.LoadId);
         _loadIdByUserLoader.Remove(Sender);
         Context.Stop(Sender);
-        _logger.Info($"==> Loader {loadSuccessMsg.LoadId} stopped");
-
-        Become(ReceiveAuth);
       }
     }
 

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Actor.GameHub.Terminal.Abtractions
+namespace Actor.GameHub.Terminal.Abstractions
 {
   public static class TerminalMetadata
   {
@@ -8,6 +8,5 @@ namespace Actor.GameHub.Terminal.Abtractions
     public static readonly string TerminalPath = $"/user/{TerminalName}";
 
     public static string TerminalSessionName(Guid terminalId) => $"TerminalSession-{terminalId}";
-    public static string TerminalCommandExeName(Guid commandId) => $"TerminalCommandExe-{commandId}";
   }
 }

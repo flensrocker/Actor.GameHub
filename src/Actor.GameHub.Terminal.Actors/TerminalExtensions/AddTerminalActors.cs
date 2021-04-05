@@ -1,4 +1,4 @@
-﻿using Actor.GameHub.Terminal.Abtractions;
+﻿using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 

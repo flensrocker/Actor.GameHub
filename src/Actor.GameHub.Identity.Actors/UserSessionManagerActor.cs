@@ -35,13 +35,12 @@ namespace Actor.GameHub.Identity.Actors
     {
       var authUserMsg = new AuthUserMsg
       {
+        AuthId = Guid.NewGuid(),
         LoginUserMsg = loginMsg,
       };
 
       if (_loginOriginByAuthId.TryAdd(authUserMsg.AuthId, (loginMsg, Sender)))
       {
-        _logger.Info($"==> Authenticator {authUserMsg.AuthId} created");
-
         var authenticator = Context.ActorOf(UserAuthenticatorActor.Props(), IdentityMetadata.UserAuthenticatorName(authUserMsg.AuthId));
         _authIdByAuthenticatorRef.Add(authenticator, authUserMsg.AuthId);
         Context.Watch(authenticator);
@@ -71,7 +70,6 @@ namespace Actor.GameHub.Identity.Actors
         _loginOriginByAuthId.Remove(authErrorMsg.AuthId);
         _authIdByAuthenticatorRef.Remove(Sender);
         Context.Stop(Sender);
-        _logger.Info($"==> Authenticator {authErrorMsg.AuthId} stopped");
       }
     }
 
@@ -84,6 +82,7 @@ namespace Actor.GameHub.Identity.Actors
       {
         var loginSuccessMsg = new AddUserLoginMsg
         {
+          UserLoginId = Guid.NewGuid(),
           LoginOrigin = data.LoginOrigin,
           User = authSuccessMsg.User,
         };
@@ -97,7 +96,6 @@ namespace Actor.GameHub.Identity.Actors
         _loginOriginByAuthId.Remove(authSuccessMsg.AuthId);
         _authIdByAuthenticatorRef.Remove(loaderRef);
         Context.Stop(loaderRef);
-        _logger.Info($"==> Authenticator {authSuccessMsg.AuthId} stopped");
       }
     }
 

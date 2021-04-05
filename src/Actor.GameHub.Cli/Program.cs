@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Terminal;
 using Actor.GameHub.Terminal.Abstractions;
-using Actor.GameHub.Terminal.Abtractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
@@ -101,20 +100,21 @@ namespace Actor.GameHub.Cli
                         var inputMsg = new InputTerminalMsg
                         {
                           TerminalId = terminalSession.TerminalId,
+                          InputId = Guid.NewGuid(),
                           Command = command,
                           Parameter = parameter,
                         };
-                        var commandResponse = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
-                        switch (commandResponse)
+                        var inputResponse = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
+                        switch (inputResponse)
                         {
-                          case InputErrorMsg inputError:
+                          case TerminalErrorMsg terminalError:
                             {
-                              Console.Error.WriteLine($"[ERROR] {inputError.ErrorMessage}");
+                              Console.Error.WriteLine($"[ERROR] {terminalError.ErrorMessage}");
                               break;
                             }
-                          case TerminalOutputMsg output:
+                          case TerminalSuccessMsg terminalSuccess:
                             {
-                              Console.WriteLine(output.Output);
+                              Console.WriteLine(terminalSuccess.Output);
                               break;
                             }
                         }

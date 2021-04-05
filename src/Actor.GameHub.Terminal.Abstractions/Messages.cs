@@ -15,7 +15,7 @@ namespace Actor.GameHub.Terminal.Abstractions
 
   public class LoginTerminalMsg
   {
-    public Guid TerminalId { get; } = Guid.NewGuid();
+    public Guid TerminalId { get; init; }
     public LoginUserMsg LoginUser { get; init; } = null!;
   }
 
@@ -33,38 +33,27 @@ namespace Actor.GameHub.Terminal.Abstractions
   public class InputTerminalMsg
   {
     public Guid TerminalId { get; init; }
+    public Guid InputId { get; init; }
     public string Command { get; init; } = null!;
     public string? Parameter { get; init; }
   }
 
-  public class InputErrorMsg
+  public class TerminalErrorMsg
   {
     public Guid TerminalId { get; init; }
+    public Guid InputId { get; init; }
     public string ErrorMessage { get; init; } = null!;
   }
 
-  public class ExecuteCommandMsg
-  {
-    public Guid CommandId { get; } = Guid.NewGuid();
-    public InputTerminalMsg Command { get; init; } = null!;
-    public IActorRef OutputTarget { get; init; } = null!;
-  }
-
-  public class TerminalOutputMsg
+  public class TerminalSuccessMsg
   {
     public Guid TerminalId { get; init; }
+    public Guid InputId { get; init; }
     public string Output { get; init; } = null!;
   }
 
   public class CloseTerminalMsg
   {
     public Guid TerminalId { get; init; }
-  }
-
-  // ----- TerminalCommandExe
-  public class CommandOutputMsg
-  {
-    public ExecuteCommandMsg Command { get; init; } = null!;
-    public string Output { get; init; } = null!;
   }
 }

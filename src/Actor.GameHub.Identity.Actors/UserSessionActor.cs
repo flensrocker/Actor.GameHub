@@ -22,10 +22,7 @@ namespace Actor.GameHub.Identity.Actors
     private void AddUserLogin(AddUserLoginMsg addLoginMsg)
     {
       if (_user is null)
-      {
-        _logger.Info($"user session started for user {addLoginMsg.User.Username}");
         _user = addLoginMsg.User;
-      }
       else if (_user.UserId != addLoginMsg.User.UserId)
         throw new Exception($"UserId mismatch {_user.UserId} != {addLoginMsg.User.UserId}");
 
@@ -33,8 +30,6 @@ namespace Actor.GameHub.Identity.Actors
       _loginId.Add(shell, addLoginMsg.UserLoginId);
       Context.Watch(shell);
       shell.Tell(addLoginMsg);
-
-      _logger.Info($"{nameof(AddUserLogin)}: {_user.Username} logged in with userId {_user.UserId} from {Sender.Path}");
     }
 
     private void OnTerminated(Terminated terminatedMsg)

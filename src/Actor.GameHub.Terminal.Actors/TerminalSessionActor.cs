@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Terminal.Abstractions;
-using Actor.GameHub.Terminal.Abtractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Event;
@@ -16,13 +15,11 @@ namespace Actor.GameHub.Terminal
     private Guid _terminalId;
     private IActorRef? _terminalOrigin;
     private UserLoginSuccessMsg? _userLogin;
-    private readonly Dictionary<IActorRef, ExecuteCommandMsg> _commands = new();
+    private readonly Dictionary<Guid, (InputTerminalMsg Input, IActorRef InputOrigin)> _inputOriginByInputCommandId = new();
 
     public TerminalSessionActor()
     {
       Become(ReceiveLogin);
-
-      _logger.Info("==> Terminal-Session started");
     }
 
     private void ReceiveLogin()
@@ -36,7 +33,8 @@ namespace Actor.GameHub.Terminal
     private void ReceiveInput()
     {
       Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
-      Receive<CommandOutputMsg>(CommandOutput);
+      Receive<InputErrorMsg>(InputError);
+      Receive<InputSuccessMsg>(InputSuccess);
       Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
       Receive<Terminated>(OnTerminated);
     }
@@ -48,20 +46,14 @@ namespace Actor.GameHub.Terminal
       _terminalId = loginMsg.TerminalId;
       _terminalOrigin = Sender;
 
-      _logger.Info($"[Terminal {_terminalId}] login for {loginMsg.LoginUser.Username} from {_terminalOrigin.Path}");
-
       var mediator = DistributedPubSub.Get(Context.System).Mediator;
       var sendLoginUser = new Send(IdentityMetadata.IdentityPath, loginMsg.LoginUser);
       mediator.Tell(sendLoginUser, Self);
-
-      _logger.Info($"==> Login from {Self.Path}");
     }
 
     private void LoginError(UserLoginErrorMsg loginErrorMsg)
     {
       System.Diagnostics.Debug.Assert(_terminalOrigin is not null && _userLogin is null);
-
-      _logger.Error($"[Terminal {_terminalId}] login error {loginErrorMsg.ErrorMessage}");
 
       var terminalErrorMsg = new TerminalOpenErrorMsg
       {
@@ -75,8 +67,6 @@ namespace Actor.GameHub.Terminal
     private void LoginSuccess(UserLoginSuccessMsg loginSuccessMsg)
     {
       System.Diagnostics.Debug.Assert(_terminalOrigin is not null && _userLogin is null);
-
-      _logger.Info($"[Terminal {_terminalId}] user login, send to {_terminalOrigin.Path}");
 
       _userLogin = loginSuccessMsg;
 
@@ -96,27 +86,54 @@ namespace Actor.GameHub.Terminal
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      var commandMsg = new ExecuteCommandMsg
+      var inputCommandMsg = new InputCommandMsg
       {
-        Command = inputMsg,
-        OutputTarget = Sender,
+        InputCommandId = Guid.NewGuid(),
+        Command = inputMsg.Command,
+        Parameter = inputMsg.Parameter,
       };
-      var commandExe = Context.ActorOf(TerminalCommandExeActor.Props(), TerminalMetadata.TerminalCommandExeName(commandMsg.CommandId));
-      _commands.Add(commandExe, commandMsg);
-      commandExe.Tell(commandMsg);
-      Context.Watch(commandExe);
+
+      if (_inputOriginByInputCommandId.TryAdd(inputCommandMsg.InputCommandId, (inputMsg, Sender)))
+      {
+        _userLogin.ShellRef.Tell(inputCommandMsg);
+      }
+      else
+      {
+        var terminalErrorMsg = new TerminalErrorMsg
+        {
+          TerminalId = _terminalId,
+          InputId = inputMsg.InputId,
+          ErrorMessage = "inputId error, try again...",
+        };
+        Sender.Tell(terminalErrorMsg);
+      }
     }
 
-    private void CommandOutput(CommandOutputMsg cmdOutputMsg)
+    private void InputError(InputErrorMsg inputErrorMsg)
     {
-      if (_commands.Remove(Sender))
+      if (_inputOriginByInputCommandId.Remove(inputErrorMsg.InputCommandId, out var data))
       {
-        var outputMsg = new TerminalOutputMsg
+        var terminalErrorMsg = new TerminalErrorMsg
         {
-          TerminalId = cmdOutputMsg.Command.Command.TerminalId,
-          Output = cmdOutputMsg.Output,
+          TerminalId = _terminalId,
+          InputId = data.Input.InputId,
+          ErrorMessage = $"input error: {inputErrorMsg.ErrorMessage}",
         };
-        cmdOutputMsg.Command.OutputTarget.Tell(outputMsg);
+        data.InputOrigin.Tell(terminalErrorMsg);
+      }
+    }
+
+    private void InputSuccess(InputSuccessMsg inputSuccessMsg)
+    {
+      if (_inputOriginByInputCommandId.Remove(inputSuccessMsg.InputCommandId, out var data))
+      {
+        var terminalSuccessMsg = new TerminalSuccessMsg
+        {
+          TerminalId = _terminalId,
+          InputId = data.Input.InputId,
+          Output = inputSuccessMsg.Output,
+        };
+        data.InputOrigin.Tell(terminalSuccessMsg);
       }
     }
 
@@ -134,18 +151,9 @@ namespace Actor.GameHub.Terminal
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_commands.Remove(terminatedMsg.ActorRef, out var command))
+      if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.ShellRef)
       {
-        var errorMsg = new InputErrorMsg
-        {
-          TerminalId = command.Command.TerminalId,
-          ErrorMessage = $"unexpected error on command {command.Command.Command} {command.Command.Parameter}",
-        };
-        command.OutputTarget.Tell(errorMsg);
-      }
-      else if (terminatedMsg.ActorRef == _userLogin?.ShellRef)
-      {
-        _logger.Error($"UserLogin terminated, exiting");
+        _logger.Error($"Shell terminated, exiting");
         Context.System.Stop(Self);
       }
     }
