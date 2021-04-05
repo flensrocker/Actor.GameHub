@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Actor.GameHub.Identity.Abstractions;
 
 namespace Actor.GameHub.Identity.Actors
 {
-  public class UserRepository
+  public class DummyIdentityRepository : IIdentityRepository
   {
     private readonly IDictionary<string, User> _usernameMap;
     private readonly IDictionary<Guid, User> _userIdMap;
 
-    public UserRepository()
+    public DummyIdentityRepository()
     {
       var users = new User[]
       {
@@ -23,20 +25,12 @@ namespace Actor.GameHub.Identity.Actors
       _userIdMap = users.ToDictionary(u => u.UserId, u => u);
     }
 
-    public User? FindByUserId(Guid userId)
-    {
-      if (_userIdMap.TryGetValue(userId, out var user))
-        return user;
-
-      return null;
-    }
-
-    public User? FindByUsername(string username)
+    public Task<User?> FindUserByUsernameForAuthAsync(string username, CancellationToken cancellationToken = default)
     {
       if (_usernameMap.TryGetValue(username, out var user))
-        return user;
+        return Task.FromResult<User?>(user);
 
-      return null;
+      return Task.FromResult<User?>(null);
     }
   }
 }

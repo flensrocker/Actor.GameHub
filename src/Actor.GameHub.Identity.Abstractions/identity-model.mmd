@@ -15,15 +15,15 @@ sequenceDiagram
     usm->>au:AuthUser
     Note over au,lo:create UserLoader
     activate lo
-    au->>lo:LoadUserByUsername
+    au->>lo:LoadUserByUsernameForAuth
     alt Error in Login
       rect rgba(255, 0, 0, .2)
         lo->>au:UserLoadError
-        Note over lo:Stop self
+        au->>usm:UserAuthError
+        au->>lo:Stop
         lo->>au:Terminated
         deactivate lo
-        au->>usm:UserAuthError
-        Note over au:Stop self
+        usm->>au:Stop
         au->>usm:Terminated
         deactivate au
         usm->>o:UserLoginError
@@ -32,11 +32,13 @@ sequenceDiagram
       rect rgba(0, 255, 0, .2)
         activate au
         activate lo
-        lo->>au:UserLoadSuccess
+        lo->>au:UserLoadForAuthSuccess
+        au->>lo:Stop
         au->>usm:UserAuthSuccess
-        Note over lo:Stop self
+        lo->>au:Terminated
         deactivate lo
-        Note over au:Stop self
+        usm->>au:Stop
+        au->>usm:Terminated
         deactivate au
         Note over usm,us:get or create UserSession
         activate us
@@ -48,6 +50,7 @@ sequenceDiagram
         opt another successfull LoginUser
           o-->>id:LoginUser
           id-->>usm:LoginUser
+          Note over usm,us:successfull UserAuth, get UserSession
           usm-->>us:AddUserLogin
           Note over us,sh:create UserLogin
           activate sh

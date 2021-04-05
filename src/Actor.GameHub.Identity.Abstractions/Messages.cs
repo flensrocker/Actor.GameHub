@@ -47,7 +47,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   // ----- UserLoader
 
-  public class LoadUserByUsernameMsg
+  public class LoadUserByUsernameForAuthMsg
   {
     public Guid LoadId { get; } = Guid.NewGuid();
     public string Username { get; init; } = null!;
@@ -59,7 +59,7 @@ namespace Actor.GameHub.Identity.Abstractions
     public string ErrorMessage { get; init; } = null!;
   }
 
-  public class UserLoadSuccessMsg
+  public class UserLoadForAuthSuccessMsg
   {
     public Guid LoadId { get; init; }
     public User User { get; init; } = null!;

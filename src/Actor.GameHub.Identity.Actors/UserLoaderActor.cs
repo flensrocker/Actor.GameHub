@@ -1,29 +1,31 @@
-﻿using Actor.GameHub.Identity.Abstractions;
+﻿using System.Threading.Tasks;
+using Actor.GameHub.Identity.Abstractions;
 using Akka.Actor;
 
 namespace Actor.GameHub.Identity.Actors
 {
   public class UserLoaderActor : ReceiveActor
   {
-    private readonly UserRepository _userRepository = new();
+    private readonly IIdentityRepository _identityRepository = new DummyIdentityRepository();
 
     public UserLoaderActor()
     {
-      Receive<LoadUserByUsernameMsg>(LoadUserByUsername);
+      ReceiveAsync<LoadUserByUsernameForAuthMsg>(LoadUserByUsernameAsync);
     }
 
-    private void LoadUserByUsername(LoadUserByUsernameMsg loadMsg)
+    private async Task LoadUserByUsernameAsync(LoadUserByUsernameForAuthMsg loadMsg)
     {
+      // save Context/Sender before await
       var loadOrigin = Sender;
 
-      var user = _userRepository.FindByUsername(loadMsg.Username);
+      var user = await _identityRepository.FindUserByUsernameForAuthAsync(loadMsg.Username);
       object reply = user is null
         ? new UserLoadErrorMsg
         {
           LoadId = loadMsg.LoadId,
           ErrorMessage = "user not found",
         }
-        : new UserLoadSuccessMsg
+        : new UserLoadForAuthSuccessMsg
         {
           LoadId = loadMsg.LoadId,
           User = user,
