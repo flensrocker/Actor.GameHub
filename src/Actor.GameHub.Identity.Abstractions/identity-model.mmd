@@ -19,7 +19,7 @@ sequenceDiagram
     au->>lo:LoadUserByUsernameForAuth
     alt Error in Login
       rect rgba(255, 0, 0, .2)
-        lo->>au:UserLoadError
+        lo->>au:UserLoadForAuthError
         au->>usm:UserAuthError
         au->>lo:Stop
         lo->>au:Terminated
@@ -44,21 +44,21 @@ sequenceDiagram
         Note over usm,us:get or create UserSession
         activate us
         usm->>us:AddUserLogin
-        Note over us,sh:create UserLogin
+        Note over us,sh:create Shell
         activate sh
         us-->>sh:AddUserLogin
         sh->>o:UserLoginSuccess
-        o->>sh:InputCommand
+        o->>sh:InputShell
         Note over sh,sc:create ShellCommand
         activate sc
         sh->>sc:ExecuteCommand
         alt valid command
           sc->>sh:CommandSuccess
-          sh->>o:InputSuccess
+          sh->>o:ShellInputSuccess
           sh->>sc:Stop
         else invalid command
           sc->>sh:CommandError
-          sh->>o:InputError
+          sh->>o:ShellInputError
           sh->>sc:Stop
           sc->>sh:Terminated
           deactivate sc
@@ -68,7 +68,7 @@ sequenceDiagram
           id-->>usm:LoginUser
           Note over usm,us:successfull UserAuth, get or create UserSession
           usm-->>us:AddUserLogin
-          Note over us,sh:create UserLogin
+          Note over us,sh:create Shell
           activate sh
           us-->>sh:AddUserLogin
           sh-->>o:UserLoginSuccess

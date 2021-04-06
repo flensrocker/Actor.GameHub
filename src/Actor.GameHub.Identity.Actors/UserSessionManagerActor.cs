@@ -63,7 +63,7 @@ namespace Actor.GameHub.Identity.Actors
       {
         var loginErrorMsg = new UserLoginErrorMsg
         {
-          ErrorMessage = $"auth error: {authErrorMsg.ErrorMessage}",
+          ErrorMessage = authErrorMsg.ErrorMessage,
         };
         data.LoginOrigin.Tell(loginErrorMsg);
 

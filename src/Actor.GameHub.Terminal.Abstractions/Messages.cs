@@ -33,22 +33,22 @@ namespace Actor.GameHub.Terminal.Abstractions
   public class InputTerminalMsg
   {
     public Guid TerminalId { get; init; }
-    public Guid InputId { get; init; }
+    public Guid TerminalInputId { get; init; }
     public string Command { get; init; } = null!;
     public string? Parameter { get; init; }
   }
 
-  public class TerminalErrorMsg
+  public class TerminalInputErrorMsg
   {
     public Guid TerminalId { get; init; }
-    public Guid InputId { get; init; }
+    public Guid TerminalInputId { get; init; }
     public string ErrorMessage { get; init; } = null!;
   }
 
-  public class TerminalSuccessMsg
+  public class TerminalInputSuccessMsg
   {
     public Guid TerminalId { get; init; }
-    public Guid InputId { get; init; }
+    public Guid TerminalInputId { get; init; }
     public string Output { get; init; } = null!;
   }
 

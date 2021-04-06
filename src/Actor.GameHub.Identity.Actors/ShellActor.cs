@@ -11,8 +11,8 @@ namespace Actor.GameHub.Identity.Actors
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private AddUserLoginMsg? _userLogin;
-    private readonly Dictionary<Guid, (InputCommandMsg Input, IActorRef InputOrigin)> _inputOriginByCommandId = new();
-    private readonly Dictionary<IActorRef, Guid> _commandIdByCommandRef = new();
+    private readonly Dictionary<Guid, (InputShellMsg Input, IActorRef InputOrigin)> _inputOriginByCommandId = new();
+    private readonly Dictionary<IActorRef, Guid> _commandIdByShellCommandRef = new();
 
     public ShellActor()
     {
@@ -27,10 +27,10 @@ namespace Actor.GameHub.Identity.Actors
 
     private void ReceiveLoggedIn()
     {
-      Receive<InputCommandMsg>(Input);
+      Receive<InputShellMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId, Input);
       Receive<CommandErrorMsg>(CommandError);
       Receive<CommandSuccessMsg>(CommandSuccess);
-      Receive<LogoutUserMsg>(LogoutUser);
+      Receive<LogoutUserMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId, LogoutUser);
       Receive<Terminated>(OnTerminated);
     }
 
@@ -53,8 +53,10 @@ namespace Actor.GameHub.Identity.Actors
       Become(ReceiveLoggedIn);
     }
 
-    private void Input(InputCommandMsg inputMsg)
+    private void Input(InputShellMsg inputMsg)
     {
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
       var executeMsg = new ExecuteCommandMsg
       {
         CommandId = Guid.NewGuid(),
@@ -64,16 +66,17 @@ namespace Actor.GameHub.Identity.Actors
       if (_inputOriginByCommandId.TryAdd(executeMsg.CommandId, (inputMsg, Sender)))
       {
         var shellCommand = Context.ActorOf(ShellCommandActor.Props(), IdentityMetadata.ShellCommandName(executeMsg.CommandId));
-        _commandIdByCommandRef.Add(shellCommand, executeMsg.CommandId);
+        _commandIdByShellCommandRef.Add(shellCommand, executeMsg.CommandId);
 
         Context.Watch(shellCommand);
         shellCommand.Tell(executeMsg);
       }
       else
       {
-        var inputErrorMsg = new InputErrorMsg
+        var inputErrorMsg = new ShellInputErrorMsg
         {
-          InputCommandId = inputMsg.InputCommandId,
+          UserLoginId = _userLogin.UserLoginId,
+          ShellInputId = inputMsg.ShellInputId,
           ErrorMessage = "commandId error, try again...",
         };
         Sender.Tell(inputErrorMsg);
@@ -82,36 +85,42 @@ namespace Actor.GameHub.Identity.Actors
 
     private void CommandError(CommandErrorMsg commandErrorMsg)
     {
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
       if (_inputOriginByCommandId.TryGetValue(commandErrorMsg.CommandId, out var data)
-        && _commandIdByCommandRef.ContainsKey(Sender))
+        && _commandIdByShellCommandRef.ContainsKey(Sender))
       {
-        var inputErrorMsg = new InputErrorMsg
+        var inputErrorMsg = new ShellInputErrorMsg
         {
-          InputCommandId = data.Input.InputCommandId,
-          ErrorMessage = $"command error: {commandErrorMsg.ErrorMessage}",
+          UserLoginId = _userLogin.UserLoginId,
+          ShellInputId = data.Input.ShellInputId,
+          ErrorMessage = commandErrorMsg.ErrorMessage,
         };
         data.InputOrigin.Tell(inputErrorMsg);
 
         _inputOriginByCommandId.Remove(commandErrorMsg.CommandId);
-        _commandIdByCommandRef.Remove(Sender);
+        _commandIdByShellCommandRef.Remove(Sender);
         Context.Stop(Sender);
       }
     }
 
     private void CommandSuccess(CommandSuccessMsg commandSuccessMsg)
     {
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
       if (_inputOriginByCommandId.TryGetValue(commandSuccessMsg.CommandId, out var data)
-        && _commandIdByCommandRef.ContainsKey(Sender))
+        && _commandIdByShellCommandRef.ContainsKey(Sender))
       {
-        var inputSuccessMsg = new InputSuccessMsg
+        var inputSuccessMsg = new ShellInputSuccessMsg
         {
-          InputCommandId = data.Input.InputCommandId,
+          UserLoginId = _userLogin.UserLoginId,
+          ShellInputId = data.Input.ShellInputId,
           Output = commandSuccessMsg.Output,
         };
         data.InputOrigin.Tell(inputSuccessMsg);
 
         _inputOriginByCommandId.Remove(commandSuccessMsg.CommandId);
-        _commandIdByCommandRef.Remove(Sender);
+        _commandIdByShellCommandRef.Remove(Sender);
         Context.Stop(Sender);
       }
     }
@@ -131,16 +140,16 @@ namespace Actor.GameHub.Identity.Actors
     {
       var commandRef = terminatedMsg.ActorRef;
 
-      if (_commandIdByCommandRef.TryGetValue(commandRef, out var commandId)
+      if (_commandIdByShellCommandRef.TryGetValue(commandRef, out var commandId)
         && _inputOriginByCommandId.TryGetValue(commandId, out var data))
       {
         _logger.Warning($"{nameof(OnTerminated)}: unexpected stop of command {commandId}, {commandRef.Path}");
-        _commandIdByCommandRef.Remove(commandRef);
+        _commandIdByShellCommandRef.Remove(commandRef);
         _inputOriginByCommandId.Remove(commandId);
 
-        var inputErrorMsg = new InputErrorMsg
+        var inputErrorMsg = new ShellInputErrorMsg
         {
-          InputCommandId = data.Input.InputCommandId,
+          ShellInputId = data.Input.ShellInputId,
           ErrorMessage = "shell error: unexpected stop of command",
         };
         data.InputOrigin.Tell(inputErrorMsg);

@@ -22,17 +22,17 @@ sequenceDiagram
     else Successfull Login
       rect rgba(0, 255, 0, .2)
         activate ts
-        id->>ts:UserLogin
+        id->>ts:UserLoginSuccess
         ts->>o:TerminalOpenSuccess
         loop I/O
           o->>ts:InputTerminal
-          ts->>sh:InputCommand
+          ts->>sh:InputShell
           alt valid command
-            sh->>ts:InputSuccess
-            ts->>o:TerminalSuccess
+            sh->>ts:ShellInputSuccess
+            ts->>o:TerminalInputSuccess
           else invalid command
-            sh->>ts:InputError
-            ts->>o:TerminalError
+            sh->>ts:ShellInputError
+            ts->>o:TerminalInputError
           end
         end
         o->>ts:CloseTerminal

@@ -15,7 +15,7 @@ namespace Actor.GameHub.Terminal
     private Guid _terminalId;
     private IActorRef? _terminalOrigin;
     private UserLoginSuccessMsg? _userLogin;
-    private readonly Dictionary<Guid, (InputTerminalMsg Input, IActorRef InputOrigin)> _inputOriginByInputCommandId = new();
+    private readonly Dictionary<Guid, (InputTerminalMsg Input, IActorRef InputOrigin)> _inputOriginByShellInputId = new();
 
     public TerminalSessionActor()
     {
@@ -33,8 +33,8 @@ namespace Actor.GameHub.Terminal
     private void ReceiveInput()
     {
       Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
-      Receive<InputErrorMsg>(InputError);
-      Receive<InputSuccessMsg>(InputSuccess);
+      Receive<ShellInputErrorMsg>(InputError);
+      Receive<ShellInputSuccessMsg>(InputSuccess);
       Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
       Receive<Terminated>(OnTerminated);
     }
@@ -57,7 +57,7 @@ namespace Actor.GameHub.Terminal
 
       var terminalErrorMsg = new TerminalOpenErrorMsg
       {
-        ErrorMessage = $"terminal error: {loginErrorMsg.ErrorMessage}",
+        ErrorMessage = loginErrorMsg.ErrorMessage,
       };
       _terminalOrigin.Tell(terminalErrorMsg, Self);
 
@@ -82,55 +82,56 @@ namespace Actor.GameHub.Terminal
       Become(ReceiveInput);
     }
 
-    private void Input(InputTerminalMsg inputMsg)
+    private void Input(InputTerminalMsg inputTerminalMsg)
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      var inputCommandMsg = new InputCommandMsg
+      var inputShellMsg = new InputShellMsg
       {
-        InputCommandId = Guid.NewGuid(),
-        Command = inputMsg.Command,
-        Parameter = inputMsg.Parameter,
+        UserLoginId = _userLogin.UserLoginId,
+        ShellInputId = Guid.NewGuid(),
+        Command = inputTerminalMsg.Command,
+        Parameter = inputTerminalMsg.Parameter,
       };
 
-      if (_inputOriginByInputCommandId.TryAdd(inputCommandMsg.InputCommandId, (inputMsg, Sender)))
+      if (_inputOriginByShellInputId.TryAdd(inputShellMsg.ShellInputId, (inputTerminalMsg, Sender)))
       {
-        _userLogin.ShellRef.Tell(inputCommandMsg);
+        _userLogin.ShellRef.Tell(inputShellMsg);
       }
       else
       {
-        var terminalErrorMsg = new TerminalErrorMsg
+        var terminalErrorMsg = new TerminalInputErrorMsg
         {
           TerminalId = _terminalId,
-          InputId = inputMsg.InputId,
+          TerminalInputId = inputTerminalMsg.TerminalInputId,
           ErrorMessage = "inputId error, try again...",
         };
         Sender.Tell(terminalErrorMsg);
       }
     }
 
-    private void InputError(InputErrorMsg inputErrorMsg)
+    private void InputError(ShellInputErrorMsg inputErrorMsg)
     {
-      if (_inputOriginByInputCommandId.Remove(inputErrorMsg.InputCommandId, out var data))
+      if (_inputOriginByShellInputId.Remove(inputErrorMsg.ShellInputId, out var data))
       {
-        var terminalErrorMsg = new TerminalErrorMsg
+        var terminalErrorMsg = new TerminalInputErrorMsg
         {
           TerminalId = _terminalId,
-          InputId = data.Input.InputId,
-          ErrorMessage = $"input error: {inputErrorMsg.ErrorMessage}",
+          TerminalInputId = data.Input.TerminalInputId,
+          ErrorMessage = inputErrorMsg.ErrorMessage,
         };
         data.InputOrigin.Tell(terminalErrorMsg);
       }
     }
 
-    private void InputSuccess(InputSuccessMsg inputSuccessMsg)
+    private void InputSuccess(ShellInputSuccessMsg inputSuccessMsg)
     {
-      if (_inputOriginByInputCommandId.Remove(inputSuccessMsg.InputCommandId, out var data))
+      if (_inputOriginByShellInputId.Remove(inputSuccessMsg.ShellInputId, out var data))
       {
-        var terminalSuccessMsg = new TerminalSuccessMsg
+        var terminalSuccessMsg = new TerminalInputSuccessMsg
         {
           TerminalId = _terminalId,
-          InputId = data.Input.InputId,
+          TerminalInputId = data.Input.TerminalInputId,
           Output = inputSuccessMsg.Output,
         };
         data.InputOrigin.Tell(terminalSuccessMsg);
@@ -143,6 +144,7 @@ namespace Actor.GameHub.Terminal
 
       var logoutMsg = new LogoutUserMsg
       {
+        UserLoginId = _userLogin.UserLoginId,
       };
       _userLogin.ShellRef.Tell(logoutMsg);
 

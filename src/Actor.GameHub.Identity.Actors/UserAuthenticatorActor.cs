@@ -25,7 +25,7 @@ namespace Actor.GameHub.Identity.Actors
 
     private void ReceiveLoad()
     {
-      Receive<UserLoadErrorMsg>(UserLoadError);
+      Receive<UserLoadForAuthErrorMsg>(UserLoadError);
       Receive<UserLoadForAuthSuccessMsg>(UserLoadSuccess);
       Receive<Terminated>(OnTerminated);
     }
@@ -59,7 +59,7 @@ namespace Actor.GameHub.Identity.Actors
       }
     }
 
-    private void UserLoadError(UserLoadErrorMsg loadErrorMsg)
+    private void UserLoadError(UserLoadForAuthErrorMsg loadErrorMsg)
     {
       if (_authOriginByLoadId.TryGetValue(loadErrorMsg.LoadId, out var data)
         && _loadIdByUserLoader.ContainsKey(Sender))
@@ -67,7 +67,7 @@ namespace Actor.GameHub.Identity.Actors
         var authErrorMsg = new UserAuthErrorMsg
         {
           AuthId = data.AuthMsg.AuthId,
-          ErrorMessage = $"user load error: {loadErrorMsg.ErrorMessage}",
+          ErrorMessage = loadErrorMsg.ErrorMessage,
         };
         data.AuthOrigin.Tell(authErrorMsg);
 

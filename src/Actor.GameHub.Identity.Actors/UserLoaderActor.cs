@@ -23,7 +23,7 @@ namespace Actor.GameHub.Identity.Actors
 
       var user = await _identityRepository.FindUserByUsernameForAuthAsync(loadMsg.Username);
       object reply = user is null
-        ? new UserLoadErrorMsg
+        ? new UserLoadForAuthErrorMsg
         {
           LoadId = loadMsg.LoadId,
           ErrorMessage = "user not found",

@@ -100,19 +100,19 @@ namespace Actor.GameHub.Cli
                         var inputMsg = new InputTerminalMsg
                         {
                           TerminalId = terminalSession.TerminalId,
-                          InputId = Guid.NewGuid(),
+                          TerminalInputId = Guid.NewGuid(),
                           Command = command,
                           Parameter = parameter,
                         };
                         var inputResponse = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
                         switch (inputResponse)
                         {
-                          case TerminalErrorMsg terminalError:
+                          case TerminalInputErrorMsg terminalError:
                             {
                               Console.Error.WriteLine($"[ERROR] {terminalError.ErrorMessage}");
                               break;
                             }
-                          case TerminalSuccessMsg terminalSuccess:
+                          case TerminalInputSuccessMsg terminalSuccess:
                             {
                               Console.WriteLine(terminalSuccess.Output);
                               break;
