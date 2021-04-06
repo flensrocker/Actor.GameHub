@@ -25,10 +25,7 @@ namespace Actor.GameHub.Terminal
         LoginUser = addMsg.LoginUser,
       };
 
-      var remoteAddress = Sender.Path.Address;
-      var terminalSession = Context.ActorOf(
-        TerminalSessionActor.Props().WithDeploy(Deploy.None.WithScope(new RemoteScope(remoteAddress))),
-        TerminalMetadata.TerminalSessionName(loginMsg.TerminalId));
+      var terminalSession = Context.ActorOf(TerminalSessionActor.Props(), TerminalMetadata.TerminalSessionName(loginMsg.TerminalId));
       Context.Watch(terminalSession);
 
       terminalSession.Forward(loginMsg);
