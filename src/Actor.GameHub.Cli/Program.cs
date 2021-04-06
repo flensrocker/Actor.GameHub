@@ -47,7 +47,7 @@ namespace Actor.GameHub.Cli
         var sendOpen = new Send(TerminalMetadata.TerminalPath, openTerminalMsg);
         try
         {
-          response = await mediator.Ask(sendOpen, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
+          response = await mediator.Ask(sendOpen).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -104,7 +104,7 @@ namespace Actor.GameHub.Cli
                           Command = command,
                           Parameter = parameter,
                         };
-                        var inputResponse = await terminalSession.TerminalRef.Ask(inputMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
+                        var inputResponse = await terminalSession.TerminalRef.Ask(inputMsg).ConfigureAwait(false);
                         switch (inputResponse)
                         {
                           case TerminalInputErrorMsg terminalError:
