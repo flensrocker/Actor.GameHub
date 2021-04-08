@@ -52,7 +52,7 @@ namespace Actor.GameHub.Client
     {
       System.Diagnostics.Debug.Assert(_consoleRef is not null);
 
-      _consoleRef.Tell(terminalErrorMsg);
+      _consoleRef.Forward(terminalErrorMsg);
     }
 
     private void OpenSuccess(TerminalOpenSuccessMsg terminalSession)
@@ -60,7 +60,7 @@ namespace Actor.GameHub.Client
       System.Diagnostics.Debug.Assert(_terminalSession is null && _consoleRef is not null);
 
       _terminalSession = terminalSession;
-      _consoleRef.Tell(terminalSession);
+      _consoleRef.Forward(terminalSession);
 
       Become(ReceiveInput);
     }
@@ -76,14 +76,14 @@ namespace Actor.GameHub.Client
     {
       System.Diagnostics.Debug.Assert(_consoleRef is not null);
 
-      _consoleRef.Tell(inputErrorMsg);
+      _consoleRef.Forward(inputErrorMsg);
     }
 
     private void InputSuccess(TerminalInputSuccessMsg inputSuccessMsg)
     {
       System.Diagnostics.Debug.Assert(_consoleRef is not null);
 
-      _consoleRef.Tell(inputSuccessMsg);
+      _consoleRef.Forward(inputSuccessMsg);
     }
 
     private void Close(CloseTerminalMsg closeMsg)
