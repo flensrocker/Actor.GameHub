@@ -119,6 +119,6 @@ namespace Actor.GameHub.Identity.Actors
     }
 
     public static Props Props()
-      => Akka.Actor.Props.Create(() => new UserSessionManagerActor());
+      => Akka.Actor.Props.Create<UserSessionManagerActor>();
   }
 }

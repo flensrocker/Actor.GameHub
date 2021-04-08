@@ -121,7 +121,7 @@ namespace Actor.GameHub.Identity.Actors
 
     public static Props Props()
       => Akka.Actor.Props
-        .Create(() => new UserAuthenticatorActor())
+        .Create<UserAuthenticatorActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

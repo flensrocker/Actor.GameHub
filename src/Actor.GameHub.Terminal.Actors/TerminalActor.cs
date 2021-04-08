@@ -17,12 +17,14 @@ namespace Actor.GameHub.Terminal
       _logger.Info("==> Terminal started");
     }
 
-    private void Open(OpenTerminalMsg addMsg)
+    private void Open(OpenTerminalMsg openMsg)
     {
+      _logger.Info($"received OpenTerminal from {Sender.Path}");
+
       var loginMsg = new LoginTerminalMsg
       {
         TerminalId = Guid.NewGuid(),
-        LoginUser = addMsg.LoginUser,
+        LoginUser = openMsg.LoginUser,
       };
 
       var terminalSession = Context.ActorOf(TerminalSessionActor.Props(), TerminalMetadata.TerminalSessionName(loginMsg.TerminalId));
@@ -37,6 +39,6 @@ namespace Actor.GameHub.Terminal
     }
 
     public static Props Props()
-      => Akka.Actor.Props.Create(() => new TerminalActor());
+      => Akka.Actor.Props.Create<TerminalActor>();
   }
 }

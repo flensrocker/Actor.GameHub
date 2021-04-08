@@ -39,7 +39,7 @@ namespace Actor.GameHub.Identity.Actors
 
     public static Props Props()
       => Akka.Actor.Props
-        .Create(() => new UserLoaderActor())
+        .Create<UserLoaderActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

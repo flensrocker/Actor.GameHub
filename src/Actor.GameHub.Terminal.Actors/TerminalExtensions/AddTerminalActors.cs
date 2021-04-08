@@ -1,5 +1,6 @@
 ﻿using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
+using Akka.Cluster.Tools.Client;
 using Akka.Cluster.Tools.PublishSubscribe;
 
 namespace Actor.GameHub.Terminal
@@ -13,6 +14,9 @@ namespace Actor.GameHub.Terminal
 
       var mediator = DistributedPubSub.Get(actorSystem).Mediator;
       mediator.Tell(new Put(terminal));
+
+      var receptionist = ClusterClientReceptionist.Get(actorSystem);
+      receptionist.RegisterService(terminal);
 
       return actorSystem;
     }

@@ -1,6 +1,7 @@
 ﻿using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Identity.Actors;
 using Akka.Actor;
+using Akka.Cluster.Tools.Client;
 using Akka.Cluster.Tools.PublishSubscribe;
 
 namespace Actor.GameHub.Identity
@@ -14,6 +15,9 @@ namespace Actor.GameHub.Identity
 
       var mediator = DistributedPubSub.Get(actorSystem).Mediator;
       mediator.Tell(new Put(identity));
+
+      var receptionist = ClusterClientReceptionist.Get(actorSystem);
+      receptionist.RegisterService(identity);
 
       return actorSystem;
     }

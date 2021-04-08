@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.PingPong", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Actors", "src\Actor.GameHub.Identity.Actors\Actor.GameHub.Identity.Actors.csproj", "{C291C462-CE47-4157-A176-CC9281F10F9C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Cli", "src\Actor.GameHub.Cli\Actor.GameHub.Cli.csproj", "{ED13F9BA-022E-4782-9088-DDEF70BAE5D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Client", "src\Actor.GameHub.Client\Actor.GameHub.Client.csproj", "{ED13F9BA-022E-4782-9088-DDEF70BAE5D2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Abstractions", "src\Actor.GameHub.Identity.Abstractions\Actor.GameHub.Identity.Abstractions.csproj", "{BE616185-5A1F-43E4-B1DC-6AEED844C9EE}"
 EndProject

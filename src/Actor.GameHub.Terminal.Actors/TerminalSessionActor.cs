@@ -162,7 +162,7 @@ namespace Actor.GameHub.Terminal
 
     public static Props Props()
       => Akka.Actor.Props
-        .Create(() => new TerminalSessionActor())
+        .Create<TerminalSessionActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

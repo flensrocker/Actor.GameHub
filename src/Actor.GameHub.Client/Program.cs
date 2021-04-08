@@ -5,10 +5,9 @@ using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Terminal;
 using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
-using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
 
-namespace Actor.GameHub.Cli
+namespace Actor.GameHub.Client
 {
   class Program
   {
@@ -18,7 +17,9 @@ namespace Actor.GameHub.Cli
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync("app.config"))
         : ConfigurationFactory.Default();
 
-      var gamehubSystem = ActorSystem.Create("GameHub", config);
+      var gameHubClientSystem = ActorSystem.Create("GameHubClient", config);
+
+      var consoleRef = gameHubClientSystem.ActorOf(ConsoleActor.Props(), "Console");
 
       var username = "";
       object? response = null;
@@ -36,7 +37,6 @@ namespace Actor.GameHub.Cli
           }
         } while (true);
 
-        var mediator = DistributedPubSub.Get(gamehubSystem).Mediator;
         var openTerminalMsg = new OpenTerminalMsg
         {
           LoginUser = new LoginUserMsg
@@ -44,10 +44,9 @@ namespace Actor.GameHub.Cli
             Username = username,
           },
         };
-        var sendOpen = new Send(TerminalMetadata.TerminalPath, openTerminalMsg);
         try
         {
-          response = await mediator.Ask(sendOpen).ConfigureAwait(false);
+          response = await consoleRef.Ask(openTerminalMsg, TimeSpan.FromSeconds(10.0)).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -90,7 +89,7 @@ namespace Actor.GameHub.Cli
                   case "exit":
                     {
                       runCommand = false;
-                      terminalSession.TerminalRef.Tell(new CloseTerminalMsg { TerminalId = terminalSession.TerminalId }, ActorRefs.NoSender);
+                      consoleRef.Tell(new CloseTerminalMsg { TerminalId = terminalSession.TerminalId }, ActorRefs.NoSender);
                       break;
                     }
                   default:
@@ -104,7 +103,7 @@ namespace Actor.GameHub.Cli
                           Command = command,
                           Parameter = parameter,
                         };
-                        var inputResponse = await terminalSession.TerminalRef.Ask(inputMsg).ConfigureAwait(false);
+                        var inputResponse = await consoleRef.Ask(inputMsg).ConfigureAwait(false);
                         switch (inputResponse)
                         {
                           case TerminalInputErrorMsg terminalError:
@@ -137,7 +136,7 @@ namespace Actor.GameHub.Cli
         }
       } while (run);
 
-      await gamehubSystem.Terminate();
+      await gameHubClientSystem.Terminate();
     }
   }
 }

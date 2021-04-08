@@ -44,7 +44,7 @@ namespace Actor.GameHub.Identity.Actors
 
     public static Props Props()
       => Akka.Actor.Props
-        .Create(() => new UserSessionActor())
+        .Create<UserSessionActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }
