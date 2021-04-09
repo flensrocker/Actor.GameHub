@@ -12,7 +12,7 @@ namespace Actor.GameHub
   {
     static async Task Main(string[] args)
     {
-      var configFile = args is { Length: 1 } ? args[0] : "app.config";
+      var configFile = args is { Length: 1 } ? args[0] : "gamehub-seed.akka";
       var config = File.Exists(configFile)
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync(configFile))
         : ConfigurationFactory.Default();

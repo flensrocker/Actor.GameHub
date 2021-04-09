@@ -13,8 +13,9 @@ namespace Actor.GameHub.Client
   {
     static async Task Main(string[] args)
     {
-      var config = File.Exists("app.config")
-        ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync("app.config"))
+      var configFile = args is { Length: 1 } ? args[0] : "gamehub-client.akka";
+      var config = File.Exists(configFile)
+        ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync(configFile))
         : ConfigurationFactory.Default();
 
       var gameHubClientSystem = ActorSystem.Create("GameHubClient", config);

@@ -75,7 +75,6 @@ namespace Actor.GameHub.Client
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
       _inputSender.Add(inputTerminalMsg.TerminalInputId, Sender);
-      //_clusterClient.Tell(new ClusterClient.Send(_terminalSession.TerminalRef.Path.ToStringWithoutAddress(), inputTerminalMsg));
       _terminalSession.TerminalRef.Tell(inputTerminalMsg);
     }
 
@@ -95,7 +94,7 @@ namespace Actor.GameHub.Client
     {
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
-      _clusterClient.Tell(new ClusterClient.Send(_terminalSession.TerminalRef.Path.ToStringWithoutAddress(), closeMsg));
+      _terminalSession.TerminalRef.Tell(closeMsg);
 
       _terminalSession = null;
       _openSenderRef = null;
