@@ -1,4 +1,6 @@
-﻿using Actor.GameHub.Terminal.Abstractions;
+﻿using System;
+using System.Collections.Generic;
+using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.Client;
 using Akka.Event;
@@ -9,7 +11,8 @@ namespace Actor.GameHub.Client
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-    private IActorRef? _consoleRef;
+    private IActorRef? _openSenderRef;
+    private Dictionary<Guid, IActorRef> _inputSender = new();
     private IActorRef _clusterClient = null!;
     private TerminalOpenSuccessMsg? _terminalSession;
 
@@ -44,23 +47,25 @@ namespace Actor.GameHub.Client
     {
       _logger.Info($"open terminal from {Sender.Path}");
 
-      _consoleRef = Sender;
+      _openSenderRef = Sender;
       _clusterClient.Tell(new ClusterClient.Send(TerminalMetadata.TerminalPath, openMsg));
     }
 
     private void OpenError(TerminalOpenErrorMsg terminalErrorMsg)
     {
-      System.Diagnostics.Debug.Assert(_consoleRef is not null);
+      System.Diagnostics.Debug.Assert(_openSenderRef is not null);
 
-      _consoleRef.Forward(terminalErrorMsg);
+      _openSenderRef.Forward(terminalErrorMsg);
+      _openSenderRef = null;
     }
 
     private void OpenSuccess(TerminalOpenSuccessMsg terminalSession)
     {
-      System.Diagnostics.Debug.Assert(_terminalSession is null && _consoleRef is not null);
+      System.Diagnostics.Debug.Assert(_terminalSession is null && _openSenderRef is not null);
 
       _terminalSession = terminalSession;
-      _consoleRef.Forward(terminalSession);
+      _openSenderRef.Forward(terminalSession);
+      _openSenderRef = null;
 
       Become(ReceiveInput);
     }
@@ -69,21 +74,21 @@ namespace Actor.GameHub.Client
     {
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
-      _clusterClient.Tell(new ClusterClient.Send(_terminalSession.TerminalRef.Path.ToStringWithoutAddress(), inputTerminalMsg));
+      _inputSender.Add(inputTerminalMsg.TerminalInputId, Sender);
+      //_clusterClient.Tell(new ClusterClient.Send(_terminalSession.TerminalRef.Path.ToStringWithoutAddress(), inputTerminalMsg));
+      _terminalSession.TerminalRef.Tell(inputTerminalMsg);
     }
 
     private void InputError(TerminalInputErrorMsg inputErrorMsg)
     {
-      System.Diagnostics.Debug.Assert(_consoleRef is not null);
-
-      _consoleRef.Forward(inputErrorMsg);
+      if (_inputSender.Remove(inputErrorMsg.TerminalInputId, out var inputSender))
+        inputSender.Forward(inputErrorMsg);
     }
 
     private void InputSuccess(TerminalInputSuccessMsg inputSuccessMsg)
     {
-      System.Diagnostics.Debug.Assert(_consoleRef is not null);
-
-      _consoleRef.Forward(inputSuccessMsg);
+      if (_inputSender.Remove(inputSuccessMsg.TerminalInputId, out var inputSender))
+        inputSender.Forward(inputSuccessMsg);
     }
 
     private void Close(CloseTerminalMsg closeMsg)
@@ -93,7 +98,8 @@ namespace Actor.GameHub.Client
       _clusterClient.Tell(new ClusterClient.Send(_terminalSession.TerminalRef.Path.ToStringWithoutAddress(), closeMsg));
 
       _terminalSession = null;
-      _consoleRef = null;
+      _openSenderRef = null;
+      _inputSender.Clear();
 
       Become(ReceiveOpen);
     }

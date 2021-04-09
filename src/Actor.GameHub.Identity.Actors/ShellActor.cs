@@ -47,8 +47,6 @@ namespace Actor.GameHub.Identity.Actors
         User = _userLogin.User,
       };
       _userLogin.LoginOrigin.Tell(loginSuccessMsg);
-      Context.Watch(_userLogin.LoginOrigin);
-      _logger.Info($"==> Watch login-origin {_userLogin.LoginOrigin.Path}");
 
       Become(ReceiveLoggedIn);
     }
@@ -129,10 +127,7 @@ namespace Actor.GameHub.Identity.Actors
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      _logger.Info($"==> Unwatch login-origin {_userLogin.LoginOrigin.Path}");
-      var loginOrigin = _userLogin.LoginOrigin;
       _userLogin = null;
-      Context.Unwatch(loginOrigin);
       Context.System.Stop(Self);
     }
 
@@ -153,11 +148,6 @@ namespace Actor.GameHub.Identity.Actors
           ErrorMessage = "shell error: unexpected stop of command",
         };
         data.InputOrigin.Tell(inputErrorMsg);
-      }
-      else if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.LoginOrigin)
-      {
-        _logger.Warning($"==> login-origin {_userLogin.LoginOrigin.Path} terminated, stopping");
-        Context.System.Stop(Self);
       }
     }
 
