@@ -35,6 +35,7 @@ namespace Actor.GameHub.Terminal
       Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
       Receive<ShellInputErrorMsg>(InputError);
       Receive<ShellInputSuccessMsg>(InputSuccess);
+      Receive<ShellExitMsg>(ShellExit);
       Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
       Receive<Terminated>(OnTerminated);
     }
@@ -138,24 +139,59 @@ namespace Actor.GameHub.Terminal
       }
     }
 
+    private void ShellExit(ShellExitMsg exitMsg)
+    {
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
+      if (_inputOriginByShellInputId.Remove(exitMsg.ShellInputId, out var data))
+      {
+        var terminalClosedMsg = new TerminalClosedMsg
+        {
+          TerminalId = _terminalId,
+          TerminalInputId = data.Input.TerminalInputId,
+          ExitCode = exitMsg.ExitCode,
+        };
+        data.InputOrigin.Tell(terminalClosedMsg);
+
+        Context.Unwatch(_userLogin.ShellRef);
+        Context.System.Stop(Self);
+      }
+    }
+
     private void Close(CloseTerminalMsg closeMsg)
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      var logoutMsg = new LogoutUserMsg
+      var exitMsg = new InputShellMsg
       {
         UserLoginId = _userLogin.UserLoginId,
+        ShellInputId = Guid.NewGuid(),
+        Command = "exit",
+        Parameter = "0",
       };
-      _userLogin.ShellRef.Tell(logoutMsg);
+      _userLogin.ShellRef.Tell(exitMsg);
 
+      Context.Unwatch(_userLogin.ShellRef);
       Context.System.Stop(Self);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_userLogin is not null && terminatedMsg.ActorRef == _userLogin.ShellRef)
+      if (_userLogin is not null)
       {
-        _logger.Error($"Shell terminated, exiting");
+        _logger.Warning($"Shell {_userLogin.UserLoginId} terminated, exiting");
+
+        foreach (var kv in _inputOriginByShellInputId)
+        {
+          var closedMsg = new TerminalClosedMsg
+          {
+            TerminalId = _terminalId,
+            TerminalInputId = kv.Key,
+            ExitCode = -1,
+          };
+          kv.Value.InputOrigin.Tell(closedMsg, ActorRefs.NoSender);
+        }
+
         Context.System.Stop(Self);
       }
     }

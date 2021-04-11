@@ -86,6 +86,7 @@ namespace Actor.GameHub.Identity.Abstractions
   {
     public Guid UserLoginId { get; init; }
     public Guid ShellInputId { get; init; }
+    public int ExitCode { get; init; }
     public string ErrorMessage { get; init; } = null!;
   }
 
@@ -93,12 +94,8 @@ namespace Actor.GameHub.Identity.Abstractions
   {
     public Guid UserLoginId { get; init; }
     public Guid ShellInputId { get; init; }
+    public int ExitCode { get; init; }
     public string Output { get; init; } = null!;
-  }
-
-  public class LogoutUserMsg
-  {
-    public Guid UserLoginId { get; init; }
   }
 
   // ----- ShellCommand
@@ -112,12 +109,21 @@ namespace Actor.GameHub.Identity.Abstractions
   public class CommandErrorMsg
   {
     public Guid CommandId { get; init; }
+    public int ExitCode { get; init; }
     public string ErrorMessage { get; init; } = null!;
   }
 
   public class CommandSuccessMsg
   {
     public Guid CommandId { get; init; }
+    public int ExitCode { get; init; }
     public string Output { get; init; } = null!;
+  }
+
+  public class ShellExitMsg
+  {
+    public Guid UserLoginId { get; init; }
+    public Guid ShellInputId { get; init; }
+    public int ExitCode { get; init; }
   }
 }

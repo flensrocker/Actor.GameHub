@@ -18,7 +18,7 @@ namespace Actor.GameHub.Client
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync(configFile))
         : ConfigurationFactory.Default();
 
-      var gameHubClientSystem = ActorSystem.Create("GameHubClient", config);
+      using var gameHubClientSystem = ActorSystem.Create("GameHubClient", config);
 
       var consoleRef = gameHubClientSystem.ActorOf(ConsoleActor.Props(), "Console");
 
@@ -80,58 +80,56 @@ namespace Actor.GameHub.Client
                 if (string.IsNullOrWhiteSpace(command))
                   continue;
 
-                switch (command.ToLowerInvariant())
+                try
                 {
-                  case "quit":
-                    {
-                      run = false;
-                      goto case "exit";
-                    }
-                  case "exit":
-                    {
-                      runCommand = false;
-                      consoleRef.Tell(new CloseTerminalMsg { TerminalId = terminalSession.TerminalId }, ActorRefs.NoSender);
-                      break;
-                    }
-                  default:
-                    {
-                      try
+                  var inputMsg = new InputTerminalMsg
+                  {
+                    TerminalId = terminalSession.TerminalId,
+                    TerminalInputId = Guid.NewGuid(),
+                    Command = command,
+                    Parameter = parameter,
+                  };
+                  var inputResponse = await consoleRef.Ask(inputMsg).ConfigureAwait(false);
+                  switch (inputResponse)
+                  {
+                    case TerminalInputErrorMsg terminalError:
                       {
-                        var inputMsg = new InputTerminalMsg
-                        {
-                          TerminalId = terminalSession.TerminalId,
-                          TerminalInputId = Guid.NewGuid(),
-                          Command = command,
-                          Parameter = parameter,
-                        };
-                        var inputResponse = await consoleRef.Ask(inputMsg).ConfigureAwait(false);
-                        switch (inputResponse)
-                        {
-                          case TerminalInputErrorMsg terminalError:
-                            {
-                              Console.Error.WriteLine($"[ERROR] {terminalError.ErrorMessage}");
-                              break;
-                            }
-                          case TerminalInputSuccessMsg terminalSuccess:
-                            {
-                              Console.WriteLine(terminalSuccess.Output);
-                              break;
-                            }
-                        }
+                        Console.Error.WriteLine($"[ERROR] {terminalError.ErrorMessage}");
+                        break;
                       }
-                      catch (Exception ex)
+                    case TerminalInputSuccessMsg terminalSuccess:
                       {
-                        Console.Error.WriteLine($"Terminal error: {ex.Message}");
+                        Console.WriteLine(terminalSuccess.Output);
+                        break;
                       }
-                      break;
-                    }
+                    case TerminalClosedMsg closedMsg:
+                      {
+                        Console.WriteLine($"exited with code {closedMsg.ExitCode}");
+                        runCommand = false;
+                        break;
+                      }
+                    default:
+                      {
+                        Console.Error.WriteLine($"[ERROR] unknown response {inputResponse}");
+                        run = false;
+                        runCommand = false;
+                        break;
+                      }
+                  }
                 }
-              } while (runCommand);
+                catch (Exception ex)
+                {
+                  Console.Error.WriteLine($"Terminal error: {ex.Message}");
+                }
+              } while (run && runCommand);
+
+              consoleRef.Tell(new CloseTerminalMsg { TerminalId = terminalSession.TerminalId });
               break;
             }
           default:
             {
               Console.Error.WriteLine($"unknown response: {response}");
+              run = false;
               break;
             }
         }

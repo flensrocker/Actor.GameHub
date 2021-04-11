@@ -17,7 +17,7 @@ namespace Actor.GameHub
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync(configFile))
         : ConfigurationFactory.Default();
 
-      var gameHubServerSystem = ActorSystem.Create("GameHub", config)
+      using var gameHubServerSystem = ActorSystem.Create("GameHub", config)
         .AddIdentityActors()
         .AddTerminalActors();
 

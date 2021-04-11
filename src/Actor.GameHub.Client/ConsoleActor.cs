@@ -12,7 +12,7 @@ namespace Actor.GameHub.Client
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private IActorRef? _openSenderRef;
-    private Dictionary<Guid, IActorRef> _inputSender = new();
+    private readonly Dictionary<Guid, IActorRef> _inputSender = new();
     private IActorRef _clusterClient = null!;
     private TerminalOpenSuccessMsg? _terminalSession;
 
@@ -36,6 +36,8 @@ namespace Actor.GameHub.Client
       Receive<TerminalInputErrorMsg>(InputError);
       Receive<TerminalInputSuccessMsg>(InputSuccess);
       Receive<CloseTerminalMsg>(Close);
+      Receive<TerminalClosedMsg>(OnClose);
+      Receive<Terminated>(OnTerminated);
     }
 
     protected override void PreStart()
@@ -45,8 +47,6 @@ namespace Actor.GameHub.Client
 
     private void Open(OpenTerminalMsg openMsg)
     {
-      _logger.Info($"open terminal from {Sender.Path}");
-
       _openSenderRef = Sender;
       _clusterClient.Tell(new ClusterClient.Send(TerminalMetadata.TerminalPath, openMsg));
     }
@@ -64,6 +64,7 @@ namespace Actor.GameHub.Client
       System.Diagnostics.Debug.Assert(_terminalSession is null && _openSenderRef is not null);
 
       _terminalSession = terminalSession;
+      Context.Watch(_terminalSession.TerminalRef);
       _openSenderRef.Forward(terminalSession);
       _openSenderRef = null;
 
@@ -95,12 +96,55 @@ namespace Actor.GameHub.Client
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
       _terminalSession.TerminalRef.Tell(closeMsg);
+      Context.Unwatch(_terminalSession.TerminalRef);
 
       _terminalSession = null;
       _openSenderRef = null;
       _inputSender.Clear();
 
       Become(ReceiveOpen);
+    }
+
+    private void OnClose(TerminalClosedMsg closedMsg)
+    {
+      System.Diagnostics.Debug.Assert(_terminalSession is not null);
+
+      if (_inputSender.Remove(closedMsg.TerminalInputId, out var inputSender))
+      {
+        inputSender.Forward(closedMsg);
+
+        Context.Unwatch(_terminalSession.TerminalRef);
+        _terminalSession = null;
+        _openSenderRef = null;
+        _inputSender.Clear();
+
+        Become(ReceiveOpen);
+      }
+    }
+
+    private void OnTerminated(Terminated terminatedMsg)
+    {
+      if (_terminalSession is not null)
+      {
+        _logger.Warning($"Terminal {_terminalSession.TerminalId} terminated");
+
+        foreach (var kv in _inputSender)
+        {
+          var closedMsg = new TerminalClosedMsg
+          {
+            TerminalId = _terminalSession.TerminalId,
+            TerminalInputId = kv.Key,
+            ExitCode = -1,
+          };
+          kv.Value.Tell(closedMsg);
+        }
+
+        _terminalSession = null;
+        _openSenderRef = null;
+        _inputSender.Clear();
+
+        Become(ReceiveOpen);
+      }
     }
 
     public static Props Props()

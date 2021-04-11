@@ -11,6 +11,7 @@ namespace Actor.GameHub.Identity.Actors
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private AddUserLoginMsg? _userLogin;
+    private int _lastCommandExitCode = 0;
     private readonly Dictionary<Guid, (InputShellMsg Input, IActorRef InputOrigin)> _inputOriginByCommandId = new();
     private readonly Dictionary<IActorRef, Guid> _commandIdByShellCommandRef = new();
 
@@ -27,10 +28,10 @@ namespace Actor.GameHub.Identity.Actors
 
     private void ReceiveLoggedIn()
     {
+      Receive<InputShellMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId && msg.Command == "exit", Exit);
       Receive<InputShellMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId, Input);
       Receive<CommandErrorMsg>(CommandError);
       Receive<CommandSuccessMsg>(CommandSuccess);
-      Receive<LogoutUserMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId, LogoutUser);
       Receive<Terminated>(OnTerminated);
     }
 
@@ -49,6 +50,21 @@ namespace Actor.GameHub.Identity.Actors
       _userLogin.LoginOrigin.Tell(loginSuccessMsg);
 
       Become(ReceiveLoggedIn);
+    }
+
+    private void Exit(InputShellMsg inputMsg)
+    {
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
+      Sender.Tell(new ShellExitMsg
+      {
+        UserLoginId = _userLogin.UserLoginId,
+        ShellInputId = inputMsg.ShellInputId,
+        ExitCode = _lastCommandExitCode,
+      });
+
+      _userLogin = null;
+      Context.System.Stop(Self);
     }
 
     private void Input(InputShellMsg inputMsg)
@@ -85,20 +101,33 @@ namespace Actor.GameHub.Identity.Actors
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
+      var commandRef = Sender;
       if (_inputOriginByCommandId.TryGetValue(commandErrorMsg.CommandId, out var data)
-        && _commandIdByShellCommandRef.ContainsKey(Sender))
+        && _commandIdByShellCommandRef.ContainsKey(commandRef))
       {
+        _lastCommandExitCode = commandErrorMsg.ExitCode;
+
+        // TODO Remove
+        if (_lastCommandExitCode < 0)
+        {
+          Context.System.Stop(Self);
+          return;
+        }
+
         var inputErrorMsg = new ShellInputErrorMsg
         {
           UserLoginId = _userLogin.UserLoginId,
           ShellInputId = data.Input.ShellInputId,
+          ExitCode = commandErrorMsg.ExitCode,
           ErrorMessage = commandErrorMsg.ErrorMessage,
         };
         data.InputOrigin.Tell(inputErrorMsg);
 
         _inputOriginByCommandId.Remove(commandErrorMsg.CommandId);
-        _commandIdByShellCommandRef.Remove(Sender);
-        Context.Stop(Sender);
+        _commandIdByShellCommandRef.Remove(commandRef);
+
+        Context.Unwatch(commandRef);
+        Context.Stop(commandRef);
       }
     }
 
@@ -106,33 +135,33 @@ namespace Actor.GameHub.Identity.Actors
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
+      var commandRef = Sender;
       if (_inputOriginByCommandId.TryGetValue(commandSuccessMsg.CommandId, out var data)
-        && _commandIdByShellCommandRef.ContainsKey(Sender))
+        && _commandIdByShellCommandRef.ContainsKey(commandRef))
       {
+        _lastCommandExitCode = commandSuccessMsg.ExitCode;
+
         var inputSuccessMsg = new ShellInputSuccessMsg
         {
           UserLoginId = _userLogin.UserLoginId,
           ShellInputId = data.Input.ShellInputId,
+          ExitCode = commandSuccessMsg.ExitCode,
           Output = commandSuccessMsg.Output,
         };
         data.InputOrigin.Tell(inputSuccessMsg);
 
         _inputOriginByCommandId.Remove(commandSuccessMsg.CommandId);
-        _commandIdByShellCommandRef.Remove(Sender);
-        Context.Stop(Sender);
+        _commandIdByShellCommandRef.Remove(commandRef);
+
+        Context.Unwatch(commandRef);
+        Context.Stop(commandRef);
       }
-    }
-
-    private void LogoutUser(LogoutUserMsg logoutMsg)
-    {
-      System.Diagnostics.Debug.Assert(_userLogin is not null);
-
-      _userLogin = null;
-      Context.System.Stop(Self);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
+      System.Diagnostics.Debug.Assert(_userLogin is not null);
+
       var commandRef = terminatedMsg.ActorRef;
 
       if (_commandIdByShellCommandRef.TryGetValue(commandRef, out var commandId)
@@ -144,7 +173,9 @@ namespace Actor.GameHub.Identity.Actors
 
         var inputErrorMsg = new ShellInputErrorMsg
         {
+          UserLoginId = _userLogin.UserLoginId,
           ShellInputId = data.Input.ShellInputId,
+          ExitCode = -1,
           ErrorMessage = "shell error: unexpected stop of command",
         };
         data.InputOrigin.Tell(inputErrorMsg);

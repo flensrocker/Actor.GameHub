@@ -17,15 +17,22 @@ namespace Actor.GameHub.Identity.Actors
         var outputMsg = new CommandSuccessMsg
         {
           CommandId = commandMsg.CommandId,
+          ExitCode = 0,
           Output = $"{commandMsg.Input.Parameter}",
         };
         Sender.Tell(outputMsg);
       }
       else if (commandMsg.Input.Command == "error")
       {
+        var exitCode = 0;
+
+        if (!string.IsNullOrWhiteSpace(commandMsg.Input.Parameter))
+          _ = int.TryParse(commandMsg.Input.Parameter, out exitCode);
+
         var errorMsg = new CommandErrorMsg
         {
           CommandId = commandMsg.CommandId,
+          ExitCode = exitCode,
           ErrorMessage = $"{commandMsg.Input.Parameter}",
         };
         Sender.Tell(errorMsg);
