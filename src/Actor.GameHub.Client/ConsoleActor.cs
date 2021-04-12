@@ -23,6 +23,9 @@ namespace Actor.GameHub.Client
       _logger.Info("==> Console started");
     }
 
+    private bool MsgIsAllowed(ITerminalMsg msg)
+      => _terminalSession is not null && _terminalSession.TerminalId == msg.TerminalId;
+
     private void ReceiveOpen()
     {
       Receive<OpenTerminalMsg>(Open);
@@ -32,11 +35,11 @@ namespace Actor.GameHub.Client
 
     private void ReceiveInput()
     {
-      Receive<InputTerminalMsg>(Input);
-      Receive<TerminalInputErrorMsg>(InputError);
-      Receive<TerminalInputSuccessMsg>(InputSuccess);
-      Receive<CloseTerminalMsg>(Close);
-      Receive<TerminalClosedMsg>(OnClose);
+      Receive<InputTerminalMsg>(MsgIsAllowed, Input);
+      Receive<TerminalInputErrorMsg>(MsgIsAllowed, InputError);
+      Receive<TerminalInputSuccessMsg>(MsgIsAllowed, InputSuccess);
+      Receive<CloseTerminalMsg>(MsgIsAllowed, Close);
+      Receive<TerminalClosedMsg>(MsgIsAllowed, OnClose);
       Receive<Terminated>(OnTerminated);
     }
 
@@ -109,17 +112,15 @@ namespace Actor.GameHub.Client
     {
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
-      if (_inputSender.Remove(closedMsg.TerminalInputId, out var inputSender))
-      {
-        inputSender.Forward(closedMsg);
+      foreach (var kv in _inputSender)
+        kv.Value.Forward(closedMsg);
 
-        Context.Unwatch(_terminalSession.TerminalRef);
-        _terminalSession = null;
-        _openSenderRef = null;
-        _inputSender.Clear();
+      Context.Unwatch(_terminalSession.TerminalRef);
+      _terminalSession = null;
+      _openSenderRef = null;
+      _inputSender.Clear();
 
-        Become(ReceiveOpen);
-      }
+      Become(ReceiveOpen);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
@@ -133,7 +134,6 @@ namespace Actor.GameHub.Client
           var closedMsg = new TerminalClosedMsg
           {
             TerminalId = _terminalSession.TerminalId,
-            TerminalInputId = kv.Key,
             ExitCode = -1,
           };
           kv.Value.Tell(closedMsg);

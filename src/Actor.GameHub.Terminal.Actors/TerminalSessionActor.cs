@@ -137,6 +137,7 @@ namespace Actor.GameHub.Terminal
         {
           TerminalId = _terminalId,
           TerminalInputId = data.Input.TerminalInputId,
+          ExitCode = inputSuccessMsg.ExitCode,
           Output = inputSuccessMsg.Output,
         };
         data.InputOrigin.Tell(terminalSuccessMsg);
@@ -152,7 +153,6 @@ namespace Actor.GameHub.Terminal
         var terminalClosedMsg = new TerminalClosedMsg
         {
           TerminalId = _terminalId,
-          TerminalInputId = data.Input.TerminalInputId,
           ExitCode = exitMsg.ExitCode,
         };
         data.InputOrigin.Tell(terminalClosedMsg);
@@ -190,7 +190,6 @@ namespace Actor.GameHub.Terminal
           var closedMsg = new TerminalClosedMsg
           {
             TerminalId = _terminalId,
-            TerminalInputId = kv.Key,
             ExitCode = -1,
           };
           kv.Value.InputOrigin.Tell(closedMsg, ActorRefs.NoSender);

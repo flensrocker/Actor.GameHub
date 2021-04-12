@@ -4,6 +4,11 @@ using Akka.Actor;
 
 namespace Actor.GameHub.Terminal.Abstractions
 {
+  public interface ITerminalMsg
+  {
+    Guid TerminalId { get; }
+  }
+
   // ----- Terminal
 
   public class OpenTerminalMsg
@@ -13,7 +18,7 @@ namespace Actor.GameHub.Terminal.Abstractions
 
   // ----- TerminalSession
 
-  public class LoginTerminalMsg
+  public class LoginTerminalMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
     public LoginUserMsg LoginUser { get; init; } = null!;
@@ -24,7 +29,7 @@ namespace Actor.GameHub.Terminal.Abstractions
     public string ErrorMessage { get; init; } = null!;
   }
 
-  public class TerminalOpenSuccessMsg
+  public class TerminalOpenSuccessMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
     public IActorRef TerminalRef { get; init; } = null!;
@@ -33,7 +38,7 @@ namespace Actor.GameHub.Terminal.Abstractions
     //public string? AuthToken { get; init; }
   }
 
-  public class InputTerminalMsg
+  public class InputTerminalMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
     public Guid TerminalInputId { get; init; }
@@ -41,7 +46,7 @@ namespace Actor.GameHub.Terminal.Abstractions
     public string? Parameter { get; init; }
   }
 
-  public class TerminalInputErrorMsg
+  public class TerminalInputErrorMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
     public Guid TerminalInputId { get; init; }
@@ -49,22 +54,22 @@ namespace Actor.GameHub.Terminal.Abstractions
     public string ErrorMessage { get; init; } = null!;
   }
 
-  public class TerminalInputSuccessMsg
+  public class TerminalInputSuccessMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
     public Guid TerminalInputId { get; init; }
+    public int ExitCode { get; init; }
     public string Output { get; init; } = null!;
   }
 
-  public class CloseTerminalMsg
+  public class CloseTerminalMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
   }
 
-  public class TerminalClosedMsg
+  public class TerminalClosedMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
-    public Guid TerminalInputId { get; init; }
     public int ExitCode { get; set; }
   }
 }

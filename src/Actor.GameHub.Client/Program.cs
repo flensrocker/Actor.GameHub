@@ -98,7 +98,7 @@ namespace Actor.GameHub.Client
                         }
                       case TerminalClosedMsg closedMsg:
                         {
-                          Console.WriteLine($"closed with code {closedMsg.ExitCode}");
+                          Console.WriteLine($"closed with exit-code {closedMsg.ExitCode}");
                           runCommandLoop = false;
                           break;
                         }
