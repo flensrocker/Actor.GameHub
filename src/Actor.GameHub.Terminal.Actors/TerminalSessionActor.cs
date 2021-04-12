@@ -77,6 +77,8 @@ namespace Actor.GameHub.Terminal
       {
         TerminalId = _terminalId,
         TerminalRef = Self,
+        UserId = loginSuccessMsg.User.UserId,
+        Username = loginSuccessMsg.User.Username,
       };
       _terminalOrigin.Tell(terminalSuccessMsg, Self);
 

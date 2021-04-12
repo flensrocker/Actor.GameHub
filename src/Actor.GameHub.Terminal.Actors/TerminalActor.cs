@@ -17,20 +17,23 @@ namespace Actor.GameHub.Terminal
       _logger.Info("==> Terminal started");
     }
 
-    private void Open(OpenTerminalMsg openMsg)
+    private void Open(OpenTerminalMsg openTerminalMsg)
     {
       _logger.Info($"received OpenTerminal from {Sender.Path}");
 
-      var loginMsg = new LoginTerminalMsg
+      var loginTerminalMsg = new LoginTerminalMsg
       {
         TerminalId = Guid.NewGuid(),
-        LoginUser = openMsg.LoginUser,
+        LoginUser = new Identity.Abstractions.LoginUserMsg
+        {
+          Username = openTerminalMsg.Username,
+        },
       };
 
-      var terminalSession = Context.ActorOf(TerminalSessionActor.Props(), TerminalMetadata.TerminalSessionName(loginMsg.TerminalId));
-      Context.Watch(terminalSession);
+      var terminalSessionRef = Context.ActorOf(TerminalSessionActor.Props(), TerminalMetadata.TerminalSessionName(loginTerminalMsg.TerminalId));
+      Context.Watch(terminalSessionRef);
 
-      terminalSession.Forward(loginMsg);
+      terminalSessionRef.Forward(loginTerminalMsg);
     }
 
     private void OnTerminated(Terminated terminatedMsg)

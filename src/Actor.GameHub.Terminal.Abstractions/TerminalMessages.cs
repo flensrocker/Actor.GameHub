@@ -8,7 +8,7 @@ namespace Actor.GameHub.Terminal.Abstractions
 
   public class OpenTerminalMsg
   {
-    public LoginUserMsg LoginUser { get; init; } = null!;
+    public string Username { get; init; } = null!;
   }
 
   // ----- TerminalSession
@@ -28,6 +28,9 @@ namespace Actor.GameHub.Terminal.Abstractions
   {
     public Guid TerminalId { get; init; }
     public IActorRef TerminalRef { get; init; } = null!;
+    public Guid UserId { get; init; }
+    public string Username { get; init; } = null!;
+    //public string? AuthToken { get; init; }
   }
 
   public class InputTerminalMsg
