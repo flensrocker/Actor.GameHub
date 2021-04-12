@@ -83,7 +83,7 @@ namespace Actor.GameHub.Client
                       Parameter = parameter,
                     };
                     var inputResponse = await consoleRef.Ask(inputMsg).ConfigureAwait(false);
-                  
+
                     switch (inputResponse)
                     {
                       case TerminalInputErrorMsg terminalError:

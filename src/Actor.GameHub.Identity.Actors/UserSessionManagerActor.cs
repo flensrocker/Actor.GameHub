@@ -16,7 +16,6 @@ namespace Actor.GameHub.Identity.Actors
     public UserSessionManagerActor()
     {
       Receive<LoginUserMsg>(msg => !msg.IsValid(), LoginInvalid);
-      Receive<LoginUserMsg>(msg => msg.Username.ToLowerInvariant() == "timeout", msg => { });
       Receive<LoginUserMsg>(LoginUser);
       Receive<UserAuthErrorMsg>(AuthError);
       Receive<UserAuthSuccessMsg>(AuthSuccess);

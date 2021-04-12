@@ -20,6 +20,9 @@ namespace Actor.GameHub.Identity.Actors
       Become(ReceiveLogin);
     }
 
+    private bool IsMsgAllowed(Guid userLoginId)
+      => _userLogin is not null && _userLogin.UserLoginId == userLoginId;
+
     private void ReceiveLogin()
     {
       Receive<AddUserLoginMsg>(AddLogin);
@@ -28,8 +31,8 @@ namespace Actor.GameHub.Identity.Actors
 
     private void ReceiveLoggedIn()
     {
-      Receive<InputShellMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId && msg.Command == "exit", Exit);
-      Receive<InputShellMsg>(msg => msg.UserLoginId == _userLogin?.UserLoginId, Input);
+      Receive<InputShellMsg>(msg => IsMsgAllowed(msg.UserLoginId) && msg.Command == "exit", Exit);
+      Receive<InputShellMsg>(msg => IsMsgAllowed(msg.UserLoginId), Input);
       Receive<CommandErrorMsg>(CommandError);
       Receive<CommandSuccessMsg>(CommandSuccess);
       Receive<Terminated>(OnTerminated);
@@ -106,13 +109,6 @@ namespace Actor.GameHub.Identity.Actors
         && _commandIdByShellCommandRef.ContainsKey(commandRef))
       {
         _lastCommandExitCode = commandErrorMsg.ExitCode;
-
-        // TODO Remove
-        if (_lastCommandExitCode < 0)
-        {
-          Context.Stop(Self);
-          return;
-        }
 
         var inputErrorMsg = new ShellInputErrorMsg
         {
