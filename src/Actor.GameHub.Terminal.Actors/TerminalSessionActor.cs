@@ -4,6 +4,7 @@ using Actor.GameHub.Identity.Abstractions;
 using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
+using Akka.DependencyInjection;
 using Akka.Event;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -237,9 +238,9 @@ namespace Actor.GameHub.Terminal
       }
     }
 
-    public static Props Props()
-      => Akka.Actor.Props
-        .Create<TerminalSessionActor>()
+    public static Props Props(ActorSystem actorSystem)
+      => ServiceProvider.For(actorSystem)
+        .Props<TerminalSessionActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

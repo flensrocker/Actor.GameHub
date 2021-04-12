@@ -30,8 +30,7 @@ namespace Actor.GameHub.Terminal
         },
       };
 
-      var sessionProps = ServiceProvider.For(Context.System).Props<TerminalSessionActor>();
-      var terminalSessionRef = Context.ActorOf(sessionProps, TerminalMetadata.TerminalSessionName(loginTerminalMsg.TerminalId));
+      var terminalSessionRef = Context.ActorOf(TerminalSessionActor.Props(Context.System), TerminalMetadata.TerminalSessionName(loginTerminalMsg.TerminalId));
       Context.Watch(terminalSessionRef);
 
       terminalSessionRef.Forward(loginTerminalMsg);
