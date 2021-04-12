@@ -64,7 +64,7 @@ namespace Actor.GameHub.Identity.Actors
       });
 
       _userLogin = null;
-      Context.System.Stop(Self);
+      Context.Stop(Self);
     }
 
     private void Input(InputShellMsg inputMsg)
@@ -110,7 +110,7 @@ namespace Actor.GameHub.Identity.Actors
         // TODO Remove
         if (_lastCommandExitCode < 0)
         {
-          Context.System.Stop(Self);
+          Context.Stop(Self);
           return;
         }
 

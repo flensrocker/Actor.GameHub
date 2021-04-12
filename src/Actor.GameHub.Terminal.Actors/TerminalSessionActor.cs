@@ -62,7 +62,7 @@ namespace Actor.GameHub.Terminal
       };
       _terminalOrigin.Tell(terminalErrorMsg, Self);
 
-      Context.System.Stop(Self);
+      Context.Stop(Self);
     }
 
     private void LoginSuccess(UserLoginSuccessMsg loginSuccessMsg)
@@ -158,7 +158,7 @@ namespace Actor.GameHub.Terminal
         data.InputOrigin.Tell(terminalClosedMsg);
 
         Context.Unwatch(_userLogin.ShellRef);
-        Context.System.Stop(Self);
+        Context.Stop(Self);
       }
     }
 
@@ -176,7 +176,7 @@ namespace Actor.GameHub.Terminal
       _userLogin.ShellRef.Tell(exitMsg);
 
       Context.Unwatch(_userLogin.ShellRef);
-      Context.System.Stop(Self);
+      Context.Stop(Self);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
@@ -196,7 +196,7 @@ namespace Actor.GameHub.Terminal
           kv.Value.InputOrigin.Tell(closedMsg, ActorRefs.NoSender);
         }
 
-        Context.System.Stop(Self);
+        Context.Stop(Self);
       }
     }
 

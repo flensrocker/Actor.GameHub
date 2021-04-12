@@ -115,7 +115,7 @@ namespace Actor.GameHub.Identity.Actors
         };
         data.AuthOrigin.Tell(authErrorMsg);
 
-        Context.System.Stop(Self);
+        Context.Stop(Self);
       }
     }
 

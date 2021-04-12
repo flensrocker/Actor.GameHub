@@ -37,7 +37,7 @@ namespace Actor.GameHub.Identity.Actors
       if (_loginId.Remove(terminatedMsg.ActorRef)
         && _loginId.Count == 0)
       {
-        Context.System.Stop(Self);
+        Context.Stop(Self);
         _logger.Info($"user session closed for user {_user?.Username}");
       }
     }
