@@ -88,7 +88,7 @@ namespace Actor.GameHub.Client
                     {
                       case TerminalInputErrorMsg terminalError:
                         {
-                          Console.Error.WriteLine($"[ERROR] {terminalError.ErrorMessage}");
+                          Console.Error.WriteLine($"[ERROR {terminalError.ExitCode}] {terminalError.ErrorMessage}");
                           break;
                         }
                       case TerminalInputSuccessMsg terminalSuccess:

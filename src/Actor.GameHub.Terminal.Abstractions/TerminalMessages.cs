@@ -45,6 +45,7 @@ namespace Actor.GameHub.Terminal.Abstractions
   {
     public Guid TerminalId { get; init; }
     public Guid TerminalInputId { get; init; }
+    public int ExitCode { get; init; }
     public string ErrorMessage { get; init; } = null!;
   }
 

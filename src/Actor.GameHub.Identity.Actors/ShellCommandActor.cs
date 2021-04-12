@@ -37,6 +37,16 @@ namespace Actor.GameHub.Identity.Actors
         };
         Sender.Tell(errorMsg);
       }
+      else
+      {
+        var errorMsg = new CommandErrorMsg
+        {
+          CommandId = commandMsg.CommandId,
+          ExitCode = 404,
+          ErrorMessage = $"Command not found: {commandMsg.Input.Command}",
+        };
+        Sender.Tell(errorMsg);
+      }
     }
 
     public static Props Props()

@@ -107,6 +107,7 @@ namespace Actor.GameHub.Terminal
         {
           TerminalId = _terminalId,
           TerminalInputId = inputTerminalMsg.TerminalInputId,
+          ExitCode = 500,
           ErrorMessage = "inputId error, try again...",
         };
         Sender.Tell(terminalErrorMsg);
@@ -121,6 +122,7 @@ namespace Actor.GameHub.Terminal
         {
           TerminalId = _terminalId,
           TerminalInputId = data.Input.TerminalInputId,
+          ExitCode = inputErrorMsg.ExitCode,
           ErrorMessage = inputErrorMsg.ErrorMessage,
         };
         data.InputOrigin.Tell(terminalErrorMsg);
