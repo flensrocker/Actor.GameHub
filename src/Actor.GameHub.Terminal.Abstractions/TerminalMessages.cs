@@ -62,6 +62,26 @@ namespace Actor.GameHub.Terminal.Abstractions
     public string Output { get; init; } = null!;
   }
 
+  public class ExecuteTerminalCommandMsg
+  {
+    public Guid CommandId { get; init; }
+    public InputTerminalMsg Input { get; init; } = null!;
+  }
+
+  public class TerminalCommandErrorMsg
+  {
+    public Guid CommandId { get; init; }
+    public int ExitCode { get; init; }
+    public string ErrorMessage { get; init; } = null!;
+  }
+
+  public class TerminalCommandSuccessMsg
+  {
+    public Guid CommandId { get; init; }
+    public int ExitCode { get; init; }
+    public string Output { get; init; } = null!;
+  }
+
   public class CloseTerminalMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }

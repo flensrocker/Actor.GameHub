@@ -5,6 +5,7 @@ using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Event;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Actor.GameHub.Terminal
 {
@@ -12,13 +13,21 @@ namespace Actor.GameHub.Terminal
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScope _scope;
+
     private Guid _terminalId;
     private IActorRef? _terminalOrigin;
     private UserLoginSuccessMsg? _userLogin;
-    private readonly Dictionary<Guid, (InputTerminalMsg Input, IActorRef InputOrigin)> _inputOriginByShellInputId = new();
 
-    public TerminalSessionActor()
+    private readonly Dictionary<Guid, (InputTerminalMsg Input, IActorRef InputOrigin)> _inputOriginByCommandId = new();
+    private readonly Dictionary<IActorRef, Guid> _commandIdByCommandRef = new();
+
+    public TerminalSessionActor(IServiceProvider serviceProvider)
     {
+      _serviceProvider = serviceProvider;
+      _scope = _serviceProvider.CreateScope();
+
       Become(ReceiveLogin);
     }
 
@@ -33,11 +42,15 @@ namespace Actor.GameHub.Terminal
     private void ReceiveInput()
     {
       Receive<InputTerminalMsg>(msg => msg.TerminalId == _terminalId, Input);
-      Receive<ShellInputErrorMsg>(InputError);
-      Receive<ShellInputSuccessMsg>(InputSuccess);
-      Receive<ShellExitMsg>(ShellExit);
+      Receive<TerminalCommandErrorMsg>(CommandError);
+      Receive<TerminalCommandSuccessMsg>(CommandSuccess);
       Receive<CloseTerminalMsg>(msg => msg.TerminalId == _terminalId, Close);
       Receive<Terminated>(OnTerminated);
+    }
+
+    protected override void PostStop()
+    {
+      _scope.Dispose();
     }
 
     private void Login(LoginTerminalMsg loginMsg)
@@ -71,8 +84,6 @@ namespace Actor.GameHub.Terminal
 
       _userLogin = loginSuccessMsg;
 
-      Context.Watch(_userLogin.ShellRef);
-
       var terminalSuccessMsg = new TerminalOpenSuccessMsg
       {
         TerminalId = _terminalId,
@@ -89,76 +100,91 @@ namespace Actor.GameHub.Terminal
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      var inputShellMsg = new InputShellMsg
-      {
-        UserLoginId = _userLogin.UserLoginId,
-        ShellInputId = Guid.NewGuid(),
-        Command = inputTerminalMsg.Command,
-        Parameter = inputTerminalMsg.Parameter,
-      };
-
-      if (_inputOriginByShellInputId.TryAdd(inputShellMsg.ShellInputId, (inputTerminalMsg, Sender)))
-      {
-        _userLogin.ShellRef.Tell(inputShellMsg);
-      }
-      else
+      var commandProps = _scope.ServiceProvider.GetTerminalCommandProps(inputTerminalMsg.Command);
+      if (commandProps is null)
       {
         var terminalErrorMsg = new TerminalInputErrorMsg
         {
           TerminalId = _terminalId,
           TerminalInputId = inputTerminalMsg.TerminalInputId,
-          ExitCode = 500,
-          ErrorMessage = "inputId error, try again...",
+          ExitCode = 404,
+          ErrorMessage = $"Command not found: {inputTerminalMsg.Command}",
         };
         Sender.Tell(terminalErrorMsg);
       }
+      else
+      {
+        var commandMsg = new ExecuteTerminalCommandMsg
+        {
+          CommandId = Guid.NewGuid(),
+          Input = inputTerminalMsg,
+        };
+
+        if (_inputOriginByCommandId.TryAdd(commandMsg.CommandId, (inputTerminalMsg, Sender)))
+        {
+          var commandRef = Context.ActorOf(commandProps, TerminalMetadata.TerminalCommandName(commandMsg.CommandId));
+          _commandIdByCommandRef.Add(commandRef, commandMsg.CommandId);
+
+          Context.Watch(commandRef);
+          commandRef.Tell(commandMsg);
+        }
+        else
+        {
+          var terminalErrorMsg = new TerminalInputErrorMsg
+          {
+            TerminalId = _terminalId,
+            TerminalInputId = inputTerminalMsg.TerminalInputId,
+            ExitCode = 500,
+            ErrorMessage = "commandId error, try again...",
+          };
+          Sender.Tell(terminalErrorMsg);
+        }
+      }
     }
 
-    private void InputError(ShellInputErrorMsg inputErrorMsg)
+    private void CommandError(TerminalCommandErrorMsg commandErrorMsg)
     {
-      if (_inputOriginByShellInputId.Remove(inputErrorMsg.ShellInputId, out var data))
+      var commandRef = Sender;
+      if (_inputOriginByCommandId.TryGetValue(commandErrorMsg.CommandId, out var data)
+        && _commandIdByCommandRef.ContainsKey(commandRef))
       {
         var terminalErrorMsg = new TerminalInputErrorMsg
         {
           TerminalId = _terminalId,
           TerminalInputId = data.Input.TerminalInputId,
-          ExitCode = inputErrorMsg.ExitCode,
-          ErrorMessage = inputErrorMsg.ErrorMessage,
+          ExitCode = commandErrorMsg.ExitCode,
+          ErrorMessage = commandErrorMsg.ErrorMessage,
         };
         data.InputOrigin.Tell(terminalErrorMsg);
+
+        _inputOriginByCommandId.Remove(commandErrorMsg.CommandId);
+        _commandIdByCommandRef.Remove(commandRef);
+
+        Context.Unwatch(commandRef);
+        Context.Stop(commandRef);
       }
     }
 
-    private void InputSuccess(ShellInputSuccessMsg inputSuccessMsg)
+    private void CommandSuccess(TerminalCommandSuccessMsg commandSuccessMsg)
     {
-      if (_inputOriginByShellInputId.Remove(inputSuccessMsg.ShellInputId, out var data))
+      var commandRef = Sender;
+      if (_inputOriginByCommandId.TryGetValue(commandSuccessMsg.CommandId, out var data)
+        && _commandIdByCommandRef.ContainsKey(commandRef))
       {
         var terminalSuccessMsg = new TerminalInputSuccessMsg
         {
           TerminalId = _terminalId,
           TerminalInputId = data.Input.TerminalInputId,
-          ExitCode = inputSuccessMsg.ExitCode,
-          Output = inputSuccessMsg.Output,
+          ExitCode = commandSuccessMsg.ExitCode,
+          Output = commandSuccessMsg.Output,
         };
         data.InputOrigin.Tell(terminalSuccessMsg);
-      }
-    }
 
-    private void ShellExit(ShellExitMsg exitMsg)
-    {
-      System.Diagnostics.Debug.Assert(_userLogin is not null);
+        _inputOriginByCommandId.Remove(commandSuccessMsg.CommandId);
+        _commandIdByCommandRef.Remove(commandRef);
 
-      if (_inputOriginByShellInputId.Remove(exitMsg.ShellInputId, out var data))
-      {
-        var terminalClosedMsg = new TerminalClosedMsg
-        {
-          TerminalId = _terminalId,
-          ExitCode = exitMsg.ExitCode,
-        };
-        data.InputOrigin.Tell(terminalClosedMsg);
-
-        Context.Unwatch(_userLogin.ShellRef);
-        Context.Stop(Self);
+        Context.Unwatch(commandRef);
+        Context.Stop(commandRef);
       }
     }
 
@@ -166,36 +192,48 @@ namespace Actor.GameHub.Terminal
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      var exitMsg = new InputShellMsg
+      foreach (var cmd in _commandIdByCommandRef)
       {
-        UserLoginId = _userLogin.UserLoginId,
-        ShellInputId = Guid.NewGuid(),
-        Command = "exit",
-        Parameter = "0",
-      };
-      _userLogin.ShellRef.Tell(exitMsg);
+        if (_inputOriginByCommandId.TryGetValue(cmd.Value, out var data))
+        {
+          Context.Unwatch(cmd.Key);
+          Context.Stop(cmd.Key);
 
-      Context.Unwatch(_userLogin.ShellRef);
+          var terminalErrorMsg = new TerminalInputErrorMsg
+          {
+            TerminalId = _terminalId,
+            TerminalInputId = data.Input.TerminalInputId,
+            ExitCode = -1,
+            ErrorMessage = "Command cancelled",
+          };
+          data.InputOrigin.Tell(terminalErrorMsg);
+        }
+      }
+      _commandIdByCommandRef.Clear();
+      _inputOriginByCommandId.Clear();
+
       Context.Stop(Self);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      if (_userLogin is not null)
+      var commandRef = terminatedMsg.ActorRef;
+
+      if (_commandIdByCommandRef.TryGetValue(commandRef, out var commandId)
+        && _inputOriginByCommandId.TryGetValue(commandId, out var data))
       {
-        _logger.Warning($"Shell {_userLogin.UserLoginId} terminated, exiting");
+        _logger.Warning($"{nameof(OnTerminated)}: unexpected stop of command {commandId}, {commandRef.Path}");
+        _commandIdByCommandRef.Remove(commandRef);
+        _inputOriginByCommandId.Remove(commandId);
 
-        foreach (var kv in _inputOriginByShellInputId)
+        var inputErrorMsg = new TerminalInputErrorMsg
         {
-          var closedMsg = new TerminalClosedMsg
-          {
-            TerminalId = _terminalId,
-            ExitCode = -1,
-          };
-          kv.Value.InputOrigin.Tell(closedMsg, ActorRefs.NoSender);
-        }
-
-        Context.Stop(Self);
+          TerminalId = _terminalId,
+          TerminalInputId = data.Input.TerminalInputId,
+          ExitCode = -1,
+          ErrorMessage = $"Command error: unexpected stop of command {data.Input.Command}",
+        };
+        data.InputOrigin.Tell(inputErrorMsg);
       }
     }
 

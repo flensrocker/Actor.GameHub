@@ -5,6 +5,8 @@ using Actor.GameHub.Identity;
 using Actor.GameHub.Terminal;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Actor.GameHub
 {
@@ -17,7 +19,17 @@ namespace Actor.GameHub
         ? ConfigurationFactory.ParseString(await File.ReadAllTextAsync(configFile))
         : ConfigurationFactory.Default();
 
-      using var gameHubServerSystem = ActorSystem.Create("GameHub", config)
+      var services = new ServiceCollection();
+      services.AddTerminalServices();
+
+      var serviceProvider = services.BuildServiceProvider();
+      var spSetup = ServiceProviderSetup.Create(serviceProvider);
+
+      var setup = BootstrapSetup.Create()
+        .WithConfig(config)
+        .And(spSetup);
+
+      using var gameHubServerSystem = ActorSystem.Create("GameHub", setup)
         .AddIdentityActors()
         .AddTerminalActors();
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
+using Akka.DependencyInjection;
 using Akka.Event;
 
 namespace Actor.GameHub.Terminal
@@ -19,18 +20,18 @@ namespace Actor.GameHub.Terminal
 
     private void Open(OpenTerminalMsg openTerminalMsg)
     {
-      _logger.Info($"received OpenTerminal from {Sender.Path}");
-
       var loginTerminalMsg = new LoginTerminalMsg
       {
         TerminalId = Guid.NewGuid(),
         LoginUser = new Identity.Abstractions.LoginUserMsg
         {
+          UserLoginId = Guid.NewGuid(),
           Username = openTerminalMsg.Username,
         },
       };
 
-      var terminalSessionRef = Context.ActorOf(TerminalSessionActor.Props(), TerminalMetadata.TerminalSessionName(loginTerminalMsg.TerminalId));
+      var sessionProps = ServiceProvider.For(Context.System).Props<TerminalSessionActor>();
+      var terminalSessionRef = Context.ActorOf(sessionProps, TerminalMetadata.TerminalSessionName(loginTerminalMsg.TerminalId));
       Context.Watch(terminalSessionRef);
 
       terminalSessionRef.Forward(loginTerminalMsg);
@@ -38,7 +39,7 @@ namespace Actor.GameHub.Terminal
 
     private void OnTerminated(Terminated terminatedMsg)
     {
-      _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg}");
+      _logger.Warning($"{nameof(OnTerminated)}: {terminatedMsg.ActorRef.Path}");
     }
 
     public static Props Props()
