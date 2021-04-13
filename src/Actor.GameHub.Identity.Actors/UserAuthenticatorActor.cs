@@ -32,19 +32,21 @@ namespace Actor.GameHub.Identity.Actors
 
     private void AuthUser(AuthUserMsg authMsg)
     {
+      var authOrigin = Sender;
+
       var loadUserMsg = new LoadUserByUsernameForAuthMsg
       {
         LoadId = Guid.NewGuid(),
         Username = authMsg.LoginUserMsg.Username,
       };
 
-      if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, Sender)))
+      if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, authOrigin)))
       {
-        var userLoader = Context.ActorOf(UserLoaderActor.Props(), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
-        _loadIdByUserLoader.Add(userLoader, loadUserMsg.LoadId);
+        var loaderRef = Context.ActorOf(UserLoaderActor.Props(), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
+        _loadIdByUserLoader.Add(loaderRef, loadUserMsg.LoadId);
 
-        Context.Watch(userLoader);
-        userLoader.Tell(loadUserMsg);
+        Context.Watch(loaderRef);
+        loaderRef.Tell(loadUserMsg);
 
         Become(ReceiveLoad);
       }
@@ -55,14 +57,16 @@ namespace Actor.GameHub.Identity.Actors
           AuthId = authMsg.AuthId,
           ErrorMessage = "user auth loadId error, try again...",
         };
-        Sender.Tell(authErrorMsg);
+        authOrigin.Tell(authErrorMsg);
       }
     }
 
     private void UserLoadError(UserLoadForAuthErrorMsg loadErrorMsg)
     {
+      var loaderRef = Sender;
+
       if (_authOriginByLoadId.TryGetValue(loadErrorMsg.LoadId, out var data)
-        && _loadIdByUserLoader.ContainsKey(Sender))
+        && _loadIdByUserLoader.ContainsKey(loaderRef))
       {
         var authErrorMsg = new UserAuthErrorMsg
         {
@@ -72,15 +76,17 @@ namespace Actor.GameHub.Identity.Actors
         data.AuthOrigin.Tell(authErrorMsg);
 
         _authOriginByLoadId.Remove(loadErrorMsg.LoadId);
-        _loadIdByUserLoader.Remove(Sender);
-        Context.Stop(Sender);
+        _loadIdByUserLoader.Remove(loaderRef);
+        Context.Stop(loaderRef);
       }
     }
 
     private void UserLoadSuccess(UserLoadForAuthSuccessMsg loadSuccessMsg)
     {
+      var loaderRef = Sender;
+
       if (_authOriginByLoadId.TryGetValue(loadSuccessMsg.LoadId, out var data)
-        && _loadIdByUserLoader.ContainsKey(Sender))
+        && _loadIdByUserLoader.ContainsKey(loaderRef))
       {
         // TODO do authentication based on password/idToken
 
@@ -92,8 +98,8 @@ namespace Actor.GameHub.Identity.Actors
         data.AuthOrigin.Tell(authSuccessMsg);
 
         _authOriginByLoadId.Remove(loadSuccessMsg.LoadId);
-        _loadIdByUserLoader.Remove(Sender);
-        Context.Stop(Sender);
+        _loadIdByUserLoader.Remove(loaderRef);
+        Context.Stop(loaderRef);
       }
     }
 

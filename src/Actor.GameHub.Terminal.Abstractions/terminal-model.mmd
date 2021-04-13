@@ -2,13 +2,14 @@ sequenceDiagram
   participant o as Origin
   participant t as Terminal
   participant ts as TerminalSession
+  participant tc as TerminalCommand
   participant id as Identity
-  participant sh as Shell
 
   o->>t:OpenTerminal
   rect rgba(160, 160, 160, .2)
     Note over t,ts:create TerminalSession
     activate ts
+    Note over ts:become ReceiveLogin
     t->>ts:LoginTerminal
     ts->>id:LoginUser
     alt Error in Login
@@ -24,19 +25,38 @@ sequenceDiagram
         activate ts
         id->>ts:UserLoginSuccess
         ts->>o:TerminalOpenSuccess
+        Note over ts:become ReceiveInput
         loop I/O
           o->>ts:InputTerminal
-          ts->>sh:InputShell
+          Note over ts,tc:create/watch TerminalCommand
+          activate tc
+          ts->>tc:ExecuteTerminalCommand
           alt valid command
-            sh->>ts:ShellInputSuccess
-            ts->>o:TerminalInputSuccess
+            rect rgba(0, 255, 0, .2)
+              tc->>ts:TerminalCommandSuccess
+              ts->>o:TerminalInputSuccess
+              ts->>tc:Stop
+              deactivate tc
+            end
           else invalid command
-            sh->>ts:ShellInputError
-            ts->>o:TerminalInputError
+            rect rgba(255, 0, 0, .2)
+              activate tc
+              tc->>ts:TerminalCommandError
+              ts->>o:TerminalInputError
+              ts->>tc:Stop
+              deactivate tc
+            end
+          else crashed command
+            rect rgba(255, 0, 0, .2)
+              activate tc
+              tc->>ts:Terminated
+              deactivate tc
+              ts->>o:TerminalInputError
+            end
           end
         end
         o->>ts:CloseTerminal
-        ts->>sh:LogoutUser
+        Note over ts,tc:Stop pending commands
         Note over ts:Stop self
         ts->>t:Terminated
         deactivate ts
