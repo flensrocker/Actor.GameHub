@@ -31,8 +31,16 @@ sequenceDiagram
           Note over ts,tc:create/watch TerminalCommand
           activate tc
           ts->>tc:ExecuteTerminalCommand
-          alt valid command
+          alt exit command
             rect rgba(0, 255, 0, .2)
+              tc->>ts:TerminalClosed
+              ts->>o:TerminalClosed
+              ts->>tc:Stop
+              deactivate tc
+            end
+          else valid command
+            rect rgba(0, 255, 0, .2)
+              activate tc
               tc->>ts:TerminalCommandSuccess
               ts->>o:TerminalInputSuccess
               ts->>tc:Stop
@@ -57,6 +65,7 @@ sequenceDiagram
         end
         o->>ts:CloseTerminal
         Note over ts,tc:Stop pending commands
+        ts->>o:TerminalInputError for every pending command
         Note over ts:Stop self
         ts->>t:Terminated
         deactivate ts

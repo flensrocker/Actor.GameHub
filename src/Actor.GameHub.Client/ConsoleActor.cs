@@ -31,6 +31,7 @@ namespace Actor.GameHub.Client
       Receive<OpenTerminalMsg>(Open);
       Receive<TerminalOpenErrorMsg>(OpenError);
       Receive<TerminalOpenSuccessMsg>(OpenSuccess);
+      Receive<InputTerminalMsg>(IgnoreInput);
     }
 
     private void ReceiveInput()
@@ -74,6 +75,17 @@ namespace Actor.GameHub.Client
       Become(ReceiveInput);
     }
 
+    private void IgnoreInput(InputTerminalMsg inputTerminalMsg)
+    {
+      System.Diagnostics.Debug.Assert(_terminalSession is null);
+
+      Sender.Tell(new TerminalInputRejectedMsg
+      {
+        TerminalId = inputTerminalMsg.TerminalId,
+        Reason = TerminalInputRejectedMsg.RejectReasonEnum.TerminalClosed,
+      });
+    }
+
     private void Input(InputTerminalMsg inputTerminalMsg)
     {
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
@@ -100,6 +112,15 @@ namespace Actor.GameHub.Client
 
       _terminalSession.TerminalRef.Tell(closeMsg);
       Context.Unwatch(_terminalSession.TerminalRef);
+
+      var closedMsg = new TerminalClosedMsg
+      {
+        TerminalId = _terminalSession.TerminalId,
+        CommandId = null,
+        ExitCode = -1,
+      };
+      foreach (var kv in _inputSender)
+        kv.Value.Tell(closedMsg);
 
       _terminalSession = null;
       _openSenderRef = null;
@@ -129,15 +150,14 @@ namespace Actor.GameHub.Client
       {
         _logger.Warning($"Terminal {_terminalSession.TerminalId} terminated");
 
-        foreach (var kv in _inputSender)
+        var closedMsg = new TerminalClosedMsg
         {
-          var closedMsg = new TerminalClosedMsg
-          {
-            TerminalId = _terminalSession.TerminalId,
-            ExitCode = -1,
-          };
+          TerminalId = _terminalSession.TerminalId,
+          CommandId = null,
+          ExitCode = -1,
+        };
+        foreach (var kv in _inputSender)
           kv.Value.Tell(closedMsg);
-        }
 
         _terminalSession = null;
         _openSenderRef = null;

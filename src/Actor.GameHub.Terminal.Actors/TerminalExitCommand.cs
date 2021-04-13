@@ -21,15 +21,10 @@ namespace Actor.GameHub.Terminal.Actors
 
     private void Execute(ExecuteTerminalCommandMsg commandMsg)
     {
-      Sender.Tell(new TerminalCommandSuccessMsg
-      {
-        CommandId = commandMsg.CommandId,
-        ExitCode = 0,
-        Output = "exiting...",
-      });
       Sender.Tell(new CloseTerminalMsg
       {
         TerminalId = commandMsg.Input.TerminalId,
+        CommandId = commandMsg.CommandId,
       });
     }
   }

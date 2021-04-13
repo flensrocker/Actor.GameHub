@@ -46,6 +46,18 @@ namespace Actor.GameHub.Terminal.Abstractions
     public string? Parameter { get; init; }
   }
 
+  public class TerminalInputRejectedMsg : ITerminalMsg
+  {
+    public enum RejectReasonEnum
+    {
+      Unknown = 0,
+      TerminalClosed = 1,
+    }
+
+    public Guid TerminalId { get; init; }
+    public RejectReasonEnum Reason { get; init; }
+  }
+
   public class TerminalInputErrorMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
@@ -85,11 +97,13 @@ namespace Actor.GameHub.Terminal.Abstractions
   public class CloseTerminalMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
+    public Guid? CommandId { get; init; }
   }
 
   public class TerminalClosedMsg : ITerminalMsg
   {
     public Guid TerminalId { get; init; }
+    public Guid? CommandId { get; init; }
     public int ExitCode { get; set; }
   }
 }

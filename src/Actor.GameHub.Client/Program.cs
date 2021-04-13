@@ -86,6 +86,13 @@ namespace Actor.GameHub.Client
 
                     switch (inputResponse)
                     {
+                      case TerminalInputRejectedMsg rejectedMsg:
+                        {
+                          Console.WriteLine($"input rejected, reason: {rejectedMsg.Reason}");
+                          if (rejectedMsg.Reason == TerminalInputRejectedMsg.RejectReasonEnum.TerminalClosed)
+                            runCommandLoop = false;
+                          break;
+                        }
                       case TerminalInputErrorMsg terminalError:
                         {
                           Console.Error.WriteLine($"[ERROR {terminalError.ExitCode}] {terminalError.ErrorMessage}");
@@ -117,7 +124,11 @@ namespace Actor.GameHub.Client
                   }
                 } while (runTerminalLoop && runCommandLoop);
 
-                consoleRef.Tell(new CloseTerminalMsg { TerminalId = terminalOpenMsg.TerminalId });
+                consoleRef.Tell(new CloseTerminalMsg
+                {
+                  TerminalId = terminalOpenMsg.TerminalId,
+                  CommandId = null,
+                });
                 break;
               }
             default:

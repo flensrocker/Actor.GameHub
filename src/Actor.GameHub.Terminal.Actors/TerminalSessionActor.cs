@@ -146,6 +146,7 @@ namespace Actor.GameHub.Terminal
     private void CommandError(TerminalCommandErrorMsg commandErrorMsg)
     {
       var commandRef = Sender;
+
       if (_inputOriginByCommandId.TryGetValue(commandErrorMsg.CommandId, out var data)
         && _commandIdByCommandRef.ContainsKey(commandRef))
       {
@@ -169,6 +170,7 @@ namespace Actor.GameHub.Terminal
     private void CommandSuccess(TerminalCommandSuccessMsg commandSuccessMsg)
     {
       var commandRef = Sender;
+
       if (_inputOriginByCommandId.TryGetValue(commandSuccessMsg.CommandId, out var data)
         && _commandIdByCommandRef.ContainsKey(commandRef))
       {
@@ -193,6 +195,29 @@ namespace Actor.GameHub.Terminal
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
+      var commandRef = Sender;
+
+      if (closeMsg.CommandId.HasValue)
+      {
+        if (_inputOriginByCommandId.TryGetValue(closeMsg.CommandId.Value, out var data)
+          && _commandIdByCommandRef.ContainsKey(commandRef))
+        {
+          var terminalClosedMsg = new TerminalClosedMsg
+          {
+            TerminalId = _terminalId,
+            CommandId = closeMsg.CommandId,
+            ExitCode = 0,
+          };
+          data.InputOrigin.Tell(terminalClosedMsg);
+
+          _inputOriginByCommandId.Remove(closeMsg.CommandId.Value);
+          _commandIdByCommandRef.Remove(commandRef);
+
+          Context.Unwatch(commandRef);
+          Context.Stop(commandRef);
+        }
+      }
+
       foreach (var cmd in _commandIdByCommandRef)
       {
         if (_inputOriginByCommandId.TryGetValue(cmd.Value, out var data))
@@ -213,6 +238,12 @@ namespace Actor.GameHub.Terminal
       _commandIdByCommandRef.Clear();
       _inputOriginByCommandId.Clear();
 
+      Context.Parent.Tell(new TerminalClosedMsg
+      {
+        TerminalId = _terminalId,
+        CommandId = closeMsg.CommandId,
+        ExitCode = 0,
+      });
       Context.Stop(Self);
     }
 

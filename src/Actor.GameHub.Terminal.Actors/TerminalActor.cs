@@ -13,6 +13,7 @@ namespace Actor.GameHub.Terminal
     public TerminalActor()
     {
       Receive<OpenTerminalMsg>(Open);
+      Receive<TerminalClosedMsg>(OnClosed);
       Receive<Terminated>(OnTerminated);
 
       _logger.Info("==> Terminal started");
@@ -34,6 +35,13 @@ namespace Actor.GameHub.Terminal
       Context.Watch(terminalSessionRef);
 
       terminalSessionRef.Forward(loginTerminalMsg);
+    }
+
+    private void OnClosed(TerminalClosedMsg closedMsg)
+    {
+      _logger.Info($"terminal session {closedMsg.TerminalId} closed");
+
+      Context.Unwatch(Sender);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
