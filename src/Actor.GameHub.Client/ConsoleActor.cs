@@ -25,6 +25,7 @@ namespace Actor.GameHub.Client
     {
       _prompt = "login: ";
 
+      Receive<InputConsoleMsg>(msg => msg.Input == "quit", Quit);
       Receive<InputConsoleMsg>(Login);
       Receive<TerminalOpenErrorMsg>(OpenError);
       Receive<TerminalOpenSuccessMsg>(OpenSuccess);
@@ -36,6 +37,7 @@ namespace Actor.GameHub.Client
 
       _prompt = $"[{_terminalSession.Username}]> ";
 
+      Receive<InputConsoleMsg>(msg => msg.Input == "quit", Quit);
       Receive<InputConsoleMsg>(Command);
       Receive<TerminalInputErrorMsg>(MsgIsAllowed, InputError);
       Receive<TerminalInputSuccessMsg>(MsgIsAllowed, InputSuccess);
@@ -50,7 +52,7 @@ namespace Actor.GameHub.Client
       Console.Write(_prompt);
     }
 
-    protected override void PostStop()
+    private void Quit(InputConsoleMsg inputMsg)
     {
       if (_terminalSession is not null)
       {
@@ -64,6 +66,8 @@ namespace Actor.GameHub.Client
         Context.Unwatch(_terminalSession.TerminalRef);
         _terminalSession = null;
       }
+
+      Context.Stop(Self);
     }
 
     private void Login(InputConsoleMsg inputMsg)

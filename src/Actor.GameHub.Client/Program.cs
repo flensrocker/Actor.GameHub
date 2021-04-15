@@ -22,7 +22,7 @@ namespace Actor.GameHub.Client
       do
       {
         var input = Console.ReadLine();
-        if (input is null || input == "quit")
+        if (input is null)
           break;
 
         var inputMsg = new InputConsoleMsg
@@ -30,6 +30,8 @@ namespace Actor.GameHub.Client
           Input = input,
         };
         consoleRef.Tell(inputMsg);
+        if (input == "quit")
+          break;
       } while (true);
 
       await gameHubClientSystem.Terminate();
