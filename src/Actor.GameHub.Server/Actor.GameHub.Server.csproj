@@ -20,7 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Actor.GameHub.Identity.Actors\Actor.GameHub.Identity.Actors.csproj" />
     <ProjectReference Include="..\Actor.GameHub.Identity.EntityFrameworkCore\Actor.GameHub.Identity.EntityFrameworkCore.csproj" />
-    <ProjectReference Include="..\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj" />
     <ProjectReference Include="..\Actor.GameHub.Terminal.Actors\Actor.GameHub.Terminal.Actors.csproj" />
   </ItemGroup>
 

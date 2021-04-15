@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.31129.286
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Server", "src\Actor.GameHub.Server\Actor.GameHub.Server.csproj", "{8EAD715A-CD4B-4F8C-AC83-761E8B977890}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.PingPong", "src\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj", "{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Actors", "src\Actor.GameHub.Identity.Actors\Actor.GameHub.Identity.Actors.csproj", "{C291C462-CE47-4157-A176-CC9281F10F9C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Client", "src\Actor.GameHub.Client\Actor.GameHub.Client.csproj", "{ED13F9BA-022E-4782-9088-DDEF70BAE5D2}"
@@ -41,18 +39,6 @@ Global
 		{8EAD715A-CD4B-4F8C-AC83-761E8B977890}.Release|x64.Build.0 = Release|Any CPU
 		{8EAD715A-CD4B-4F8C-AC83-761E8B977890}.Release|x86.ActiveCfg = Release|Any CPU
 		{8EAD715A-CD4B-4F8C-AC83-761E8B977890}.Release|x86.Build.0 = Release|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Debug|x64.Build.0 = Debug|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Debug|x86.Build.0 = Debug|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x64.ActiveCfg = Release|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x64.Build.0 = Release|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x86.ActiveCfg = Release|Any CPU
-		{0A9D4EB7-51A0-44D4-9C8E-530E720467B9}.Release|x86.Build.0 = Release|Any CPU
 		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C291C462-CE47-4157-A176-CC9281F10F9C}.Debug|x64.ActiveCfg = Debug|Any CPU
