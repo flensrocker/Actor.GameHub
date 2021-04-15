@@ -15,7 +15,7 @@ namespace Actor.GameHub.Identity.EntityFrameworkCore
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
       modelBuilder.HasDefaultSchema("Identity");
-      
+
       var userBuilder = modelBuilder.Entity<UserEntity>();
       userBuilder.ToTable("User");
       userBuilder

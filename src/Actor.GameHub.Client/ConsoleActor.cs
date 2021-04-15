@@ -1,45 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
+using Actor.GameHub.Terminal;
 using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
 using Akka.Cluster.Tools.Client;
-using Akka.Event;
 
 namespace Actor.GameHub.Client
 {
   public class ConsoleActor : ReceiveActor
   {
-    private readonly ILoggingAdapter _logger = Context.GetLogger();
+    private string _prompt = "";
 
-    private IActorRef? _openSenderRef;
-    private readonly Dictionary<Guid, IActorRef> _inputSender = new();
     private IActorRef _clusterClient = null!;
     private TerminalOpenSuccessMsg? _terminalSession;
 
     public ConsoleActor()
     {
-      Become(ReceiveOpen);
-
-      _logger.Info("==> Console started");
+      Become(ReceiveLogin);
     }
 
     private bool MsgIsAllowed(ITerminalMsg msg)
       => _terminalSession is not null && _terminalSession.TerminalId == msg.TerminalId;
 
-    private void ReceiveOpen()
+    private void ReceiveLogin()
     {
-      Receive<OpenTerminalMsg>(Open);
+      _prompt = "login: ";
+
+      Receive<InputConsoleMsg>(Login);
       Receive<TerminalOpenErrorMsg>(OpenError);
       Receive<TerminalOpenSuccessMsg>(OpenSuccess);
-      Receive<InputTerminalMsg>(IgnoreInput);
     }
 
-    private void ReceiveInput()
+    private void ReceiveCommand()
     {
-      Receive<InputTerminalMsg>(MsgIsAllowed, Input);
+      System.Diagnostics.Debug.Assert(_terminalSession is not null);
+
+      _prompt = $"[{_terminalSession.Username}]> ";
+
+      Receive<InputConsoleMsg>(Command);
       Receive<TerminalInputErrorMsg>(MsgIsAllowed, InputError);
       Receive<TerminalInputSuccessMsg>(MsgIsAllowed, InputSuccess);
-      Receive<CloseTerminalMsg>(MsgIsAllowed, Close);
       Receive<TerminalClosedMsg>(MsgIsAllowed, OnClose);
       Receive<Terminated>(OnTerminated);
     }
@@ -47,108 +46,109 @@ namespace Actor.GameHub.Client
     protected override void PreStart()
     {
       _clusterClient = Context.System.ActorOf(ClusterClient.Props(ClusterClientSettings.Create(Context.System)));
+
+      Console.Write(_prompt);
     }
 
-    private void Open(OpenTerminalMsg openMsg)
+    protected override void PostStop()
     {
-      _openSenderRef = Sender;
+      if (_terminalSession is not null)
+      {
+        var closeMsg = new CloseTerminalMsg
+        {
+          TerminalId = _terminalSession.TerminalId,
+          CommandId = Guid.NewGuid(),
+        };
+        _terminalSession.TerminalRef.Tell(closeMsg);
+
+        Context.Unwatch(_terminalSession.TerminalRef);
+        _terminalSession = null;
+      }
+    }
+
+    private void Login(InputConsoleMsg inputMsg)
+    {
+      if (string.IsNullOrWhiteSpace(inputMsg.Input))
+      {
+        Console.Write(_prompt);
+        return;
+      }
+
+      var openMsg = new OpenTerminalMsg
+      {
+        Username = inputMsg.Input,
+      };
       _clusterClient.Tell(new ClusterClient.Send(TerminalMetadata.TerminalPath, openMsg));
     }
 
     private void OpenError(TerminalOpenErrorMsg terminalErrorMsg)
     {
-      System.Diagnostics.Debug.Assert(_openSenderRef is not null);
-
-      _openSenderRef.Forward(terminalErrorMsg);
-      _openSenderRef = null;
+      Console.Error.WriteLine($"[ERROR] {terminalErrorMsg.ErrorMessage}");
+      Console.Write(_prompt);
     }
 
     private void OpenSuccess(TerminalOpenSuccessMsg terminalSession)
     {
-      System.Diagnostics.Debug.Assert(_terminalSession is null && _openSenderRef is not null);
+      Console.WriteLine($"terminal opened for user {terminalSession.UserId} with terminalId {terminalSession.TerminalId}");
 
       _terminalSession = terminalSession;
       Context.Watch(_terminalSession.TerminalRef);
-      _openSenderRef.Forward(terminalSession);
-      _openSenderRef = null;
 
-      Become(ReceiveInput);
+      Become(ReceiveCommand);
+      Console.Write(_prompt);
     }
 
-    private void IgnoreInput(InputTerminalMsg inputTerminalMsg)
-    {
-      System.Diagnostics.Debug.Assert(_terminalSession is null);
-
-      Sender.Tell(new TerminalInputRejectedMsg
-      {
-        TerminalId = inputTerminalMsg.TerminalId,
-        Reason = TerminalInputRejectedMsg.RejectReasonEnum.TerminalClosed,
-      });
-    }
-
-    private void Input(InputTerminalMsg inputTerminalMsg)
+    private void Command(InputConsoleMsg inputMsg)
     {
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
-      _inputSender.Add(inputTerminalMsg.TerminalInputId, Sender);
+      var command = inputMsg.Input.SplitFirstWord(out var parameter);
+      if (string.IsNullOrWhiteSpace(command))
+      {
+        Console.Write(_prompt);
+        return;
+      }
+
+      var inputTerminalMsg = new InputTerminalMsg
+      {
+        TerminalId = _terminalSession.TerminalId,
+        TerminalInputId = Guid.NewGuid(),
+        Command = command,
+        Parameter = parameter,
+      };
       _terminalSession.TerminalRef.Tell(inputTerminalMsg);
     }
 
     private void InputError(TerminalInputErrorMsg inputErrorMsg)
     {
-      if (_inputSender.Remove(inputErrorMsg.TerminalInputId, out var inputSender))
-        inputSender.Forward(inputErrorMsg);
+      Console.Error.WriteLine($"[ERROR {inputErrorMsg.ExitCode}] {inputErrorMsg.ErrorMessage}");
+      Console.Write(_prompt);
     }
 
     private void InputSuccess(TerminalInputSuccessMsg inputSuccessMsg)
     {
-      if (_inputSender.Remove(inputSuccessMsg.TerminalInputId, out var inputSender))
-        inputSender.Forward(inputSuccessMsg);
-    }
-
-    private void Close(CloseTerminalMsg closeMsg)
-    {
-      System.Diagnostics.Debug.Assert(_terminalSession is not null);
-
-      _terminalSession.TerminalRef.Tell(closeMsg);
-      Context.Unwatch(_terminalSession.TerminalRef);
-
-      var closedMsg = new TerminalClosedMsg
-      {
-        TerminalId = _terminalSession.TerminalId,
-        CommandId = null,
-        ExitCode = -1,
-      };
-      foreach (var kv in _inputSender)
-        kv.Value.Tell(closedMsg);
-
-      _terminalSession = null;
-      _openSenderRef = null;
-      _inputSender.Clear();
-
-      Become(ReceiveOpen);
+      Console.WriteLine(inputSuccessMsg.Output);
+      Console.Write(_prompt);
     }
 
     private void OnClose(TerminalClosedMsg closedMsg)
     {
       System.Diagnostics.Debug.Assert(_terminalSession is not null);
 
-      foreach (var kv in _inputSender)
-        kv.Value.Forward(closedMsg);
+      Console.WriteLine($"closed with exit-code {closedMsg.ExitCode}");
 
       Context.Unwatch(_terminalSession.TerminalRef);
       _terminalSession = null;
-      _openSenderRef = null;
-      _inputSender.Clear();
 
-      Become(ReceiveOpen);
+      Become(ReceiveLogin);
+      Console.Write(_prompt);
     }
 
     private void OnTerminated(Terminated terminatedMsg)
     {
       if (_terminalSession is not null)
       {
-        _logger.Warning($"Terminal {_terminalSession.TerminalId} terminated");
+        Console.Error.WriteLine($"[ERROR] Terminal {_terminalSession.TerminalId} terminated");
 
         var closedMsg = new TerminalClosedMsg
         {
@@ -156,14 +156,7 @@ namespace Actor.GameHub.Client
           CommandId = null,
           ExitCode = -1,
         };
-        foreach (var kv in _inputSender)
-          kv.Value.Tell(closedMsg);
-
-        _terminalSession = null;
-        _openSenderRef = null;
-        _inputSender.Clear();
-
-        Become(ReceiveOpen);
+        OnClose(closedMsg);
       }
     }
 

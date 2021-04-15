@@ -1,7 +1,6 @@
 ﻿using System;
 using Actor.GameHub.Terminal.Abstractions;
 using Akka.Actor;
-using Akka.DependencyInjection;
 using Akka.Event;
 
 namespace Actor.GameHub.Terminal

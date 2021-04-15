@@ -74,7 +74,7 @@ namespace Actor.GameHub.Terminal.Actors
       {
         CommandId = wakeupMsg.Command.CommandId,
         ExitCode = 0,
-        Output = "",
+        Output = $"slept {wakeupMsg.Command.Input.Parameter}s",
       });
     }
   }
