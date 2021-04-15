@@ -16,6 +16,7 @@ namespace Actor.GameHub.Terminal
 
     private readonly IServiceProvider _serviceProvider;
     private readonly IServiceScope _scope;
+    private readonly TerminalCommandService _commandService;
 
     private Guid _terminalId;
     private IActorRef? _terminalOrigin;
@@ -28,6 +29,7 @@ namespace Actor.GameHub.Terminal
     {
       _serviceProvider = serviceProvider;
       _scope = _serviceProvider.CreateScope();
+      _commandService = _scope.ServiceProvider.GetRequiredService<TerminalCommandService>();
 
       Become(ReceiveLogin);
     }
@@ -101,7 +103,7 @@ namespace Actor.GameHub.Terminal
     {
       System.Diagnostics.Debug.Assert(_userLogin is not null);
 
-      var commandProps = _scope.ServiceProvider.GetTerminalCommandProps(inputTerminalMsg.Command);
+      var commandProps = _commandService.Props(inputTerminalMsg.Command);
       if (commandProps is null)
       {
         var terminalErrorMsg = new TerminalInputErrorMsg

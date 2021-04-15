@@ -8,6 +8,8 @@ namespace Actor.GameHub.Terminal
   {
     public static IServiceCollection AddTerminalServices(this IServiceCollection services)
     {
+      services.AddSingleton(sp => new TerminalCommandService(sp));
+
       services.AddSingleton<ITerminalCommand, TerminalExitCommand>();
       services.AddSingleton<ITerminalCommand, TerminalEchoCommand>();
       services.AddSingleton<ITerminalCommand, TerminalSleepCommand>();
