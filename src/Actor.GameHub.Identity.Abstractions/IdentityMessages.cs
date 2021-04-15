@@ -62,6 +62,6 @@ namespace Actor.GameHub.Identity.Abstractions
   public class UserLoadForAuthSuccessMsg
   {
     public Guid LoadId { get; init; }
-    public User User { get; init; } = null!;
+    public UserForAuth User { get; init; } = null!;
   }
 }

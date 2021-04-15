@@ -42,7 +42,7 @@ namespace Actor.GameHub.Identity.Actors
 
       if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, authOrigin)))
       {
-        var loaderRef = Context.ActorOf(UserLoaderActor.Props(), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
+        var loaderRef = Context.ActorOf(UserLoaderActor.Props(Context.System), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
         _loadIdByUserLoader.Add(loaderRef, loadUserMsg.LoadId);
 
         Context.Watch(loaderRef);
@@ -93,7 +93,7 @@ namespace Actor.GameHub.Identity.Actors
         var authSuccessMsg = new UserAuthSuccessMsg
         {
           AuthId = data.AuthMsg.AuthId,
-          User = loadSuccessMsg.User,
+          User = new User { UserId = loadSuccessMsg.User.UserId, Username = loadSuccessMsg.User.Username },
         };
         data.AuthOrigin.Tell(authSuccessMsg);
 

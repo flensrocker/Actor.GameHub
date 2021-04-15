@@ -10,11 +10,16 @@
   <ItemGroup>
     <PackageReference Include="Akka.Cluster" Version="1.4.18" />
     <PackageReference Include="Akka.DependencyInjection" Version="1.4.18" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Actor.GameHub.Identity.Actors\Actor.GameHub.Identity.Actors.csproj" />
+    <ProjectReference Include="..\Actor.GameHub.Identity.EntityFrameworkCore\Actor.GameHub.Identity.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Actor.GameHub.PingPong\Actor.GameHub.PingPong.csproj" />
     <ProjectReference Include="..\Actor.GameHub.Terminal.Actors\Actor.GameHub.Terminal.Actors.csproj" />
   </ItemGroup>

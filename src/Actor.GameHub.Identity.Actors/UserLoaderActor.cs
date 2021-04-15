@@ -1,7 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Actor.GameHub.Identity.Abstractions;
 using Akka.Actor;
+using Akka.DependencyInjection;
 using Akka.Event;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Actor.GameHub.Identity.Actors
 {
@@ -9,11 +12,23 @@ namespace Actor.GameHub.Identity.Actors
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
-    private readonly IIdentityRepository _identityRepository = new DummyIdentityRepository();
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScope _scope;
 
-    public UserLoaderActor()
+    private readonly IIdentityRepository _identityRepository;
+
+    public UserLoaderActor(IServiceProvider serviceProvider)
     {
+      _serviceProvider = serviceProvider;
+      _scope = _serviceProvider.CreateScope();
+      _identityRepository = _scope.ServiceProvider.GetRequiredService<IIdentityRepository>();
+
       ReceiveAsync<LoadUserByUsernameForAuthMsg>(LoadUserByUsernameAsync);
+    }
+
+    protected override void PostStop()
+    {
+      _scope.Dispose();
     }
 
     private async Task LoadUserByUsernameAsync(LoadUserByUsernameForAuthMsg loadMsg)
@@ -37,9 +52,9 @@ namespace Actor.GameHub.Identity.Actors
       loadOrigin.Tell(reply);
     }
 
-    public static Props Props()
-      => Akka.Actor.Props
-        .Create<UserLoaderActor>()
+    public static Props Props(ActorSystem actorSystem)
+      => ServiceProvider.For(actorSystem)
+        .Props<UserLoaderActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }
