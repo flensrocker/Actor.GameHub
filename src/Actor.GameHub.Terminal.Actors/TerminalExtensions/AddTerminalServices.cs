@@ -10,6 +10,7 @@ namespace Actor.GameHub.Terminal
     {
       services.AddSingleton<ITerminalCommand, TerminalExitCommand>();
       services.AddSingleton<ITerminalCommand, TerminalEchoCommand>();
+      services.AddSingleton<ITerminalCommand, TerminalSleepCommand>();
 
       return services;
     }
