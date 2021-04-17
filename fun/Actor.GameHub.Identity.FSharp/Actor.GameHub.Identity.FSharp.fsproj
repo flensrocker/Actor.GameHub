@@ -7,6 +7,13 @@
 
   <ItemGroup>
     <Compile Include="Abstractions.fs" />
+    <Compile Include="LoaderActor.fs" />
+    <Compile Include="AuthenticatorActor.fs" />
+    <Compile Include="IdentityActor.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.FSharp" Version="1.4.18" />
   </ItemGroup>
 
 </Project>
