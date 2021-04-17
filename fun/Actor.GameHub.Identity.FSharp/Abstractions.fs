@@ -12,6 +12,11 @@ module IdentityMetadata =
 
 type User = { UserId: Guid; Username: string }
 
+type UserForAuth = { UserId: Guid; Username: string }
+
+type IIdentityRepository =
+    abstract member FindUserByUsernameForAuth : username: string -> UserForAuth option
+
 type IdentityMessage =
     | LoginUserMsg of UserLoginId: Guid * Username: string
     | UserAuthErrorMsg of AuthId: Guid * ErrorMessage: string
@@ -24,16 +29,13 @@ type IdentityReply =
 type AuthUserData =
     { Username: string (*; Password: string; IdToken: string*)  }
 
-type UserForAuth = { UserId: Guid; Username: string }
-
 type AuthenticatorMessage =
     | AuthUserMsg of AuthId: Guid * AuthData: AuthUserData
     | UserLoadForAuthErrorMsg of LoadId: Guid * ErrorMessage: string
     | UserLoadForAuthSuccessMsg of LoadId: Guid * User: UserForAuth
     | LoaderTerminated of LoadId: Guid
 
-type LoaderMessage =
-    | LoadUserByUsernameForAuthMsg of LoadId: Guid * Username: string
+type LoaderMessage = LoadUserByUsernameForAuthMsg of LoadId: Guid * Username: string
 
 let stoppingStrategy =
     SpawnOption.SupervisorStrategy((new StoppingSupervisorStrategy()).Create())

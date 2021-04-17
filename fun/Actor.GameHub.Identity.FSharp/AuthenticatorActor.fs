@@ -30,7 +30,7 @@ let removeLoader loadId state =
     { state with
           AuthLoaderDataByLoadId = Map.remove loadId state.AuthLoaderDataByLoadId }
 
-let handleAuth authId (authData: AuthUserData) (mailbox: Actor<_>) state =
+let handleAuth spawnLoader authId (authData: AuthUserData) (mailbox: Actor<_>) state =
     let authOrigin = mailbox.Sender()
     let loadId = Guid.NewGuid()
 
@@ -44,8 +44,7 @@ let handleAuth authId (authData: AuthUserData) (mailbox: Actor<_>) state =
         let loadUserMsg =
             LoadUserByUsernameForAuthMsg(loadId, authData.Username)
 
-        let loaderRef =
-            LoaderActor.spawnLoader mailbox.Context loadId
+        let loaderRef = spawnLoader mailbox.Context loadId
 
         mailbox.Context.WatchWith(loaderRef, LoaderTerminated loadId)
         <! loadUserMsg
@@ -86,14 +85,15 @@ let handleLoaderTerminated loadId state =
 
         removeLoader loadId state
 
-let authenticator (mailbox: Actor<_>) =
+let authenticator allowedAuthId spawnLoader (mailbox: Actor<_>) =
     let rec loop state =
         actor {
             let! msg = mailbox.Receive()
 
             let nextState =
                 match msg with
-                | AuthUserMsg (authId, authData) -> handleAuth authId authData mailbox
+                | AuthUserMsg (authId, authData) when authId = allowedAuthId ->
+                    handleAuth spawnLoader authId authData mailbox
                 | UserLoadForAuthErrorMsg (loadId, errorMessage) -> handleLoadError loadId errorMessage mailbox
                 | UserLoadForAuthSuccessMsg (loadId, user) ->
                     handleLoadSuccess
@@ -102,11 +102,12 @@ let authenticator (mailbox: Actor<_>) =
                           Username = user.Username }
                         mailbox
                 | LoaderTerminated (loadId) -> handleLoaderTerminated loadId
+                | _ -> id
 
             return! loop (nextState state)
         }
 
     loop initialAuthState
 
-let spawnAuthenticator parent authId =
-    spawnOpt parent (IdentityMetadata.AuthenticatorName authId) authenticator [ stoppingStrategy ]
+let spawnAuthenticator spawnLoader parent authId =
+    spawnOpt parent (IdentityMetadata.AuthenticatorName authId) (authenticator authId spawnLoader) [ stoppingStrategy ]
