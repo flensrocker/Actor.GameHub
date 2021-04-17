@@ -21,6 +21,7 @@ type IdentityMessage =
     | LoginUserMsg of UserLoginId: Guid * Username: string
     | UserAuthErrorMsg of AuthId: Guid * ErrorMessage: string
     | UserAuthSuccessMsg of AuthId: Guid * User: User
+    | AuthTerminated of AuthId: Guid
 
 type IdentityReply =
     | UserLoginErrorMsg of UserLoginId: Guid * ErrorMessage: string
