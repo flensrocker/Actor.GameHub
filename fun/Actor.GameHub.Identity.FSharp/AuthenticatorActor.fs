@@ -9,26 +9,26 @@ open Actor.GameHub.Identity.Abstractions
 type AuthLoaderData =
     { AuthId: Guid
       AuthData: AuthUserData
-      Origin: IActorRef }
+      AuthOrigin: IActorRef }
 
 type AuthState =
-    { AuthOriginByLoadId: Map<Guid, AuthLoaderData> }
+    { AuthLoaderDataByLoadId: Map<Guid, AuthLoaderData> }
 
-let initialAuthState = { AuthOriginByLoadId = Map.empty }
+let initialAuthState = { AuthLoaderDataByLoadId = Map.empty }
 
 let addLoader loadId authId authData authOrigin state =
     { state with
-          AuthOriginByLoadId =
+          AuthLoaderDataByLoadId =
               Map.add
                   loadId
                   { AuthId = authId
                     AuthData = authData
-                    Origin = authOrigin }
-                  state.AuthOriginByLoadId }
+                    AuthOrigin = authOrigin }
+                  state.AuthLoaderDataByLoadId }
 
 let removeLoader loadId state =
     { state with
-          AuthOriginByLoadId = Map.remove loadId state.AuthOriginByLoadId }
+          AuthLoaderDataByLoadId = Map.remove loadId state.AuthLoaderDataByLoadId }
 
 let authenticator (mailbox: Actor<_>) =
 
@@ -36,24 +36,31 @@ let authenticator (mailbox: Actor<_>) =
         let authOrigin = mailbox.Sender()
         let loadId = Guid.NewGuid()
 
-        let loadUserMsg =
-            LoadUserByUsernameForAuthMsg(loadId, authData.Username)
+        match Map.containsKey loadId state.AuthLoaderDataByLoadId with
+        | true ->
+            authOrigin
+            <! UserAuthErrorMsg(authId, "user auth loadId error, try again...")
 
-        let loaderRef =
-            LoaderActor.spawnLoader mailbox.Context loadId
+            state
+        | false ->
+            let loadUserMsg =
+                LoadUserByUsernameForAuthMsg(loadId, authData.Username)
 
-        mailbox.Context.WatchWith(loaderRef, LoaderTerminated loadId)
-        <! loadUserMsg
+            let loaderRef =
+                LoaderActor.spawnLoader mailbox.Context loadId
 
-        addLoader loadId authId authData authOrigin state
+            mailbox.Context.WatchWith(loaderRef, LoaderTerminated loadId)
+            <! loadUserMsg
+
+            addLoader loadId authId authData authOrigin state
 
     let handleLoadError loadId errorMessage state =
         let loaderRef = mailbox.Sender()
 
-        match Map.tryFind loadId state.AuthOriginByLoadId with
+        match Map.tryFind loadId state.AuthLoaderDataByLoadId with
         | None -> state
         | Some authOrigin ->
-            authOrigin.Origin
+            authOrigin.AuthOrigin
             <! UserAuthErrorMsg(authOrigin.AuthId, errorMessage)
 
             mailbox.Context.Stop(loaderRef)
@@ -62,21 +69,21 @@ let authenticator (mailbox: Actor<_>) =
     let handleLoadSuccess loadId user state =
         let loaderRef = mailbox.Sender()
 
-        match Map.tryFind loadId state.AuthOriginByLoadId with
+        match Map.tryFind loadId state.AuthLoaderDataByLoadId with
         | None -> state
         | Some authData ->
             // TODO do authentication based on password/idToken
-            authData.Origin
+            authData.AuthOrigin
             <! UserAuthSuccessMsg(authData.AuthId, user)
 
             mailbox.Context.Stop(loaderRef)
             removeLoader loadId state
 
     let handleLoaderTerminated loadId state =
-        match Map.tryFind loadId state.AuthOriginByLoadId with
+        match Map.tryFind loadId state.AuthLoaderDataByLoadId with
         | None -> state
         | Some authOrigin ->
-            authOrigin.Origin
+            authOrigin.AuthOrigin
             <! UserAuthErrorMsg(authOrigin.AuthId, $"unexpected stop of loader {loadId}")
 
             removeLoader loadId state
