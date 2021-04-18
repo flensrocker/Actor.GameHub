@@ -1,10 +1,12 @@
-﻿module Actor.GameHub.Identity.IdentityActor
+﻿module Actor.GameHub.Identity.Actors.IdentityActor
 
 open System
 open Akka.FSharp
 open Akka.Actor
 
+open Actor.GameHub.Extensions
 open Actor.GameHub.Identity.Abstractions
+open Actor.GameHub.Identity.Actors.Abstractions
 
 type AuthData =
     { LoginId: Guid
@@ -85,10 +87,12 @@ let identity spawnAuthenticator (mailbox: Actor<_>) =
 
             let nextState =
                 match msg with
-                | LoginUserMsg (loginId, username) -> handleLogin spawnAuthenticator loginId username mailbox
                 | UserAuthErrorMsg (authId, errorMessage) -> handleAuthError authId errorMessage mailbox
                 | UserAuthSuccessMsg (authId, user) -> handleAuthSuccess authId user mailbox
                 | AuthTerminated (authId) -> handleAuthTerminated authId
+                | IdentityPublicMessage pubMsg ->
+                    match pubMsg with
+                    | LoginUserMsg (loginId, username) -> handleLogin spawnAuthenticator loginId username mailbox
 
             return! loop (nextState state)
         }

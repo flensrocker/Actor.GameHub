@@ -7,9 +7,6 @@
 
   <ItemGroup>
     <Compile Include="Abstractions.fs" />
-    <Compile Include="LoaderActor.fs" />
-    <Compile Include="AuthenticatorActor.fs" />
-    <Compile Include="IdentityActor.fs" />
   </ItemGroup>
 
   <ItemGroup>

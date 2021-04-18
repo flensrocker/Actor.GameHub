@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Abstractions.fs" />
+    <Compile Include="LoaderActor.fs" />
+    <Compile Include="AuthenticatorActor.fs" />
+    <Compile Include="IdentityActor.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.FSharp" Version="1.4.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Actor.GameHub.Extensions.FSharp\Actor.GameHub.Extensions.FSharp.fsproj" />
+    <ProjectReference Include="..\Actor.GameHub.Identity.Abstractions.FSharp\Actor.GameHub.Identity.Abstractions.FSharp.fsproj" />
+  </ItemGroup>
+
+</Project>

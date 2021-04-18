@@ -1,8 +1,10 @@
-﻿module Actor.GameHub.Identity.LoaderActor
+﻿module Actor.GameHub.Identity.Actors.LoaderActor
 
 open Akka.FSharp
 
+open Actor.GameHub.Extensions
 open Actor.GameHub.Identity.Abstractions
+open Actor.GameHub.Identity.Actors.Abstractions
 
 let loadUserForAuth (identityRepository: IIdentityRepository) loadOrigin loadId username =
     let user =

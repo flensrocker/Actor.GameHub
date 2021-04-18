@@ -1,10 +1,12 @@
-﻿module Actor.GameHub.Identity.AuthenticatorActor
+﻿module Actor.GameHub.Identity.Actors.AuthenticatorActor
 
 open System
 open Akka.FSharp
 open Akka.Actor
 
+open Actor.GameHub.Extensions
 open Actor.GameHub.Identity.Abstractions
+open Actor.GameHub.Identity.Actors.Abstractions
 
 type LoaderData =
     { AuthId: Guid
