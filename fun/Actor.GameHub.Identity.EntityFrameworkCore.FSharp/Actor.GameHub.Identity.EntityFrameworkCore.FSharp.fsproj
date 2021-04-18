@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="EntityFrameworkCore.FSharp" Version="5.0.3-alpha9" />
+    <PackageReference Include="EntityFrameworkCore.FSharp" Version="5.0.3-alpha10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.5" />
   </ItemGroup>
 

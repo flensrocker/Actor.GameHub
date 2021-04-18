@@ -10,7 +10,7 @@ open Microsoft.EntityFrameworkCore.Migrations
 open Microsoft.EntityFrameworkCore.Storage.ValueConversion
 
 [<DbContext(typeof<IdentityDbContext.IdentityDbContext>)>]
-[<Migration("20210418145003_IdentityInit")>]
+[<Migration("20210418164153_IdentityInit")>]
 type IdentityInit() =
     inherit Migration()
 
@@ -45,7 +45,7 @@ type IdentityInit() =
             schema = "Identity",
             table = "User",
             columns = [| "Id"; "Username" |],
-            values = array2D [ [ Guid("cd735892-e9a7-4b36-b910-03e97a95b421") :> obj; "lars" :> obj ]; [ Guid("94342156-c2ab-433e-8e8a-d000c49a1ae9") :> obj; "merten" :> obj ]; [ Guid("1fe0f5f7-13e6-4a58-87ea-d153951a7c6c") :> obj; "sam" :> obj ]; [ Guid("ff7b5153-2218-45bc-9838-892b99f97b59") :> obj; "uli" :> obj ] ]
+            values = array2D [ [ Guid("d727abca-c58a-42d8-9176-e21c4ac906c7") :> obj; "lars" :> obj ]; [ Guid("5451dc48-749d-4d65-b7d3-06bc4853e74e") :> obj; "merten" :> obj ]; [ Guid("8b00bc0c-da63-4be4-9265-cce94044f420") :> obj; "sam" :> obj ]; [ Guid("1a58b2e7-43ca-4c4c-a188-40ff58e33312") :> obj; "uli" :> obj ] ]
         ) |> ignore
 
         migrationBuilder.CreateIndex(
@@ -91,10 +91,10 @@ type IdentityInit() =
             b.ToTable("User") |> ignore
 
             b.HasData([| 
-                {| Id = Guid("cd735892-e9a7-4b36-b910-03e97a95b421"); Username = "lars"; |}
-                {| Id = Guid("94342156-c2ab-433e-8e8a-d000c49a1ae9"); Username = "merten"; |}
-                {| Id = Guid("1fe0f5f7-13e6-4a58-87ea-d153951a7c6c"); Username = "sam"; |}
-                {| Id = Guid("ff7b5153-2218-45bc-9838-892b99f97b59"); Username = "uli"; |}
+                {| Id = Guid("d727abca-c58a-42d8-9176-e21c4ac906c7"); Username = "lars"; |}
+                {| Id = Guid("5451dc48-749d-4d65-b7d3-06bc4853e74e"); Username = "merten"; |}
+                {| Id = Guid("8b00bc0c-da63-4be4-9265-cce94044f420"); Username = "sam"; |}
+                {| Id = Guid("1a58b2e7-43ca-4c4c-a188-40ff58e33312"); Username = "uli"; |}
              |]) |> ignore
 
         )) |> ignore
