@@ -9,6 +9,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.Acto
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Extensions.FSharp", "fun\Actor.GameHub.Extensions.FSharp\Actor.GameHub.Extensions.FSharp.fsproj", "{256731BB-79BB-41E3-A405-FD96A00E2352}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Server", "fun\Actor.GameHub.Server\Actor.GameHub.Server.fsproj", "{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{256731BB-79BB-41E3-A405-FD96A00E2352}.Release|x64.Build.0 = Release|Any CPU
 		{256731BB-79BB-41E3-A405-FD96A00E2352}.Release|x86.ActiveCfg = Release|Any CPU
 		{256731BB-79BB-41E3-A405-FD96A00E2352}.Release|x86.Build.0 = Release|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Debug|x64.Build.0 = Debug|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Debug|x86.Build.0 = Debug|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x64.ActiveCfg = Release|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x64.Build.0 = Release|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x86.ActiveCfg = Release|Any CPU
+		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
