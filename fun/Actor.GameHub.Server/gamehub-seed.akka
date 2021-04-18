@@ -1,0 +1,16 @@
+akka {
+    actor.provider = cluster
+    extensions = [
+        "Akka.Cluster.Tools.Client.ClusterClientReceptionistExtensionProvider, Akka.Cluster.Tools",
+        "Akka.Cluster.Tools.PublishSubscribe.DistributedPubSubExtensionProvider, Akka.Cluster.Tools"
+    ]
+    remote {
+        dot-netty.tcp {
+            port = 8081
+            hostname = localhost
+        }
+    }
+    cluster {
+        seed-nodes = ["akka.tcp://GameHub@localhost:8081"]
+    }
+}
