@@ -11,6 +11,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Extensions.FS
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Server", "fun\Actor.GameHub.Server\Actor.GameHub.Server.fsproj", "{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.EntityFrameworkCore.FSharp", "fun\Actor.GameHub.Identity.EntityFrameworkCore.FSharp\Actor.GameHub.Identity.EntityFrameworkCore.FSharp.fsproj", "{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x64.Build.0 = Release|Any CPU
 		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x86.ActiveCfg = Release|Any CPU
 		{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}.Release|x86.Build.0 = Release|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Debug|x64.Build.0 = Debug|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Debug|x86.Build.0 = Debug|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Release|x64.ActiveCfg = Release|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Release|x64.Build.0 = Release|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Release|x86.ActiveCfg = Release|Any CPU
+		{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
