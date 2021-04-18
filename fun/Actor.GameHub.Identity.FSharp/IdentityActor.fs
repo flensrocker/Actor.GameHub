@@ -39,14 +39,9 @@ let handleLogin spawnAuthenticator loginId username (mailbox: Actor<_>) state =
 
         state
     | false ->
-        let authUserMsg =
-            AuthUserMsg(authId, { Username = username })
-
-        let authRef =
-            spawnAuthenticator mailbox.Context authId
-
-        mailbox.Context.WatchWith(authRef, AuthTerminated authId)
-        <! authUserMsg
+        spawnAuthenticator mailbox authId
+        |> monitorWith (AuthTerminated authId) mailbox.Context
+        <! AuthUserMsg(authId, { Username = username })
 
         addAuth authId loginId loginOrigin state
 
@@ -59,8 +54,7 @@ let handleAuthError authId errorMessage (mailbox: Actor<_>) state =
         loginData.LoginOrigin
         <! UserAuthErrorMsg(loginData.LoginId, errorMessage)
 
-        mailbox.Unwatch(authRef) |> ignore
-        mailbox.Context.Stop(authRef)
+        authRef |> mailbox.Unwatch |> mailbox.Context.Stop
         removeAuth authId state
 
 let handleAuthSuccess authId user (mailbox: Actor<_>) state =
@@ -72,8 +66,7 @@ let handleAuthSuccess authId user (mailbox: Actor<_>) state =
         loginData.LoginOrigin
         <! UserLoginSuccessMsg(loginData.LoginId, user)
 
-        mailbox.Unwatch(authRef) |> ignore
-        mailbox.Context.Stop(authRef)
+        authRef |> mailbox.Unwatch |> mailbox.Context.Stop
         removeAuth authId state
 
 let handleAuthTerminated authId state =

@@ -41,13 +41,9 @@ let handleAuth spawnLoader authId (authData: AuthUserData) (mailbox: Actor<_>) s
 
         state
     | false ->
-        let loadUserMsg =
-            LoadUserByUsernameForAuthMsg(loadId, authData.Username)
-
-        let loaderRef = spawnLoader mailbox.Context loadId
-
-        mailbox.Context.WatchWith(loaderRef, LoaderTerminated loadId)
-        <! loadUserMsg
+        spawnLoader mailbox.Context loadId
+        |> monitorWith (LoaderTerminated loadId) mailbox
+        <! LoadUserByUsernameForAuthMsg(loadId, authData.Username)
 
         addLoader loadId authId authData authOrigin state
 
@@ -60,8 +56,10 @@ let handleLoadError loadId errorMessage (mailbox: Actor<_>) state =
         authData.AuthOrigin
         <! UserAuthErrorMsg(authData.AuthId, errorMessage)
 
-        mailbox.Unwatch(loaderRef) |> ignore
-        mailbox.Context.Stop(loaderRef)
+        loaderRef
+        |> mailbox.Unwatch
+        |> mailbox.Context.Stop
+
         removeLoader loadId state
 
 let handleLoadSuccess loadId user (mailbox: Actor<_>) state =
@@ -74,8 +72,10 @@ let handleLoadSuccess loadId user (mailbox: Actor<_>) state =
         authData.AuthOrigin
         <! UserAuthSuccessMsg(authData.AuthId, user)
 
-        mailbox.Unwatch(loaderRef) |> ignore
-        mailbox.Context.Stop(loaderRef)
+        loaderRef
+        |> mailbox.Unwatch
+        |> mailbox.Context.Stop
+
         removeLoader loadId state
 
 let handleLoaderTerminated loadId state =

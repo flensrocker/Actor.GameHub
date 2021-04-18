@@ -40,3 +40,5 @@ type LoaderMessage = LoadUserByUsernameForAuthMsg of LoadId: Guid * Username: st
 
 let stoppingStrategy =
     SpawnOption.SupervisorStrategy((new StoppingSupervisorStrategy()).Create())
+
+let monitorWith message (watcher: ICanWatch) subject = watcher.WatchWith(subject, message)
