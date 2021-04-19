@@ -10,7 +10,7 @@ namespace Actor.GameHub.Identity.EntityFrameworkCore
     public static IServiceCollection AddIdentityEntityFrameworkCore(this IServiceCollection services, Action<DbContextOptionsBuilder> optionsAction)
     {
       services.AddDbContextFactory<IdentityDbContext>(optionsAction);
-      services.AddScoped<IIdentityRepository, DbIdentityRepository>();
+      services.AddScoped<IIdentityRepository, IdentityDbRepository>();
 
       return services;
     }

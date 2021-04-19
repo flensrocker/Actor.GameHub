@@ -29,10 +29,10 @@ namespace Actor.GameHub.Identity.EntityFrameworkCore.Migrations
           columns: new[] { "Id", "Username" },
           values: new object[,]
           {
-                    { new Guid("3212fed2-6246-46a4-8959-79748024418e"), "lars" },
-                    { new Guid("57e16b30-16fb-4203-8f22-7417e3ad91de"), "merten" },
-                    { new Guid("aa493230-83b1-4cf6-b1d8-69aaf98e767d"), "sam" },
-                    { new Guid("a1bc719c-2726-482e-bec9-7f826838d35f"), "uli" }
+            { new Guid("3212fed2-6246-46a4-8959-79748024418e"), "lars" },
+            { new Guid("57e16b30-16fb-4203-8f22-7417e3ad91de"), "merten" },
+            { new Guid("aa493230-83b1-4cf6-b1d8-69aaf98e767d"), "sam" },
+            { new Guid("a1bc719c-2726-482e-bec9-7f826838d35f"), "uli" }
           });
 
       migrationBuilder.CreateIndex(

@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Actor.GameHub.Identity.Actors
 {
-  public class UserLoaderActor : ReceiveActor
+  public class LoaderActor : ReceiveActor
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
@@ -17,7 +17,7 @@ namespace Actor.GameHub.Identity.Actors
 
     private readonly IIdentityRepository _identityRepository;
 
-    public UserLoaderActor(IServiceProvider serviceProvider)
+    public LoaderActor(IServiceProvider serviceProvider)
     {
       _serviceProvider = serviceProvider;
       _scope = _serviceProvider.CreateScope();
@@ -54,7 +54,7 @@ namespace Actor.GameHub.Identity.Actors
 
     public static Props Props(ActorSystem actorSystem)
       => ServiceProvider.For(actorSystem)
-        .Props<UserLoaderActor>()
+        .Props<LoaderActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

@@ -6,14 +6,14 @@ using Akka.Event;
 
 namespace Actor.GameHub.Identity.Actors
 {
-  public class UserAuthenticatorActor : ReceiveActor
+  public class AuthenticatorActor : ReceiveActor
   {
     private readonly ILoggingAdapter _logger = Context.GetLogger();
 
     private readonly Dictionary<Guid, (AuthUserMsg AuthMsg, IActorRef AuthOrigin)> _authOriginByLoadId = new();
     private readonly Dictionary<IActorRef, Guid> _loadIdByUserLoader = new();
 
-    public UserAuthenticatorActor()
+    public AuthenticatorActor()
     {
       Become(ReceiveAuth);
     }
@@ -42,7 +42,7 @@ namespace Actor.GameHub.Identity.Actors
 
       if (_authOriginByLoadId.TryAdd(loadUserMsg.LoadId, (authMsg, authOrigin)))
       {
-        var loaderRef = Context.ActorOf(UserLoaderActor.Props(Context.System), IdentityMetadata.UserLoaderName(loadUserMsg.LoadId));
+        var loaderRef = Context.ActorOf(LoaderActor.Props(Context.System), IdentityMetadata.LoaderName(loadUserMsg.LoadId));
         _loadIdByUserLoader.Add(loaderRef, loadUserMsg.LoadId);
 
         Context.Watch(loaderRef);
@@ -127,7 +127,7 @@ namespace Actor.GameHub.Identity.Actors
 
     public static Props Props()
       => Akka.Actor.Props
-        .Create<UserAuthenticatorActor>()
+        .Create<AuthenticatorActor>()
         .WithSupervisorStrategy(new StoppingSupervisorStrategy().Create());
   }
 }

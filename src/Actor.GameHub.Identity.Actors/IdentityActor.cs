@@ -43,7 +43,7 @@ namespace Actor.GameHub.Identity.Actors
 
       if (_loginOriginByAuthId.TryAdd(authUserMsg.AuthId, (loginMsg, Sender)))
       {
-        var authenticator = Context.ActorOf(UserAuthenticatorActor.Props(), IdentityMetadata.UserAuthenticatorName(authUserMsg.AuthId));
+        var authenticator = Context.ActorOf(AuthenticatorActor.Props(), IdentityMetadata.AuthenticatorName(authUserMsg.AuthId));
         _authIdByAuthenticatorRef.Add(authenticator, authUserMsg.AuthId);
         Context.Watch(authenticator);
         authenticator.Tell(authUserMsg);

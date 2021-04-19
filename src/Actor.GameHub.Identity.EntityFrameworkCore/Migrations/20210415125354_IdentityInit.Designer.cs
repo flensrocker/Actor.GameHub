@@ -9,60 +9,60 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Actor.GameHub.Identity.EntityFrameworkCore.Migrations
 {
-    [DbContext(typeof(IdentityDbContext))]
-    [Migration("20210415125354_IdentityInit")]
-    partial class IdentityInit
+  [DbContext(typeof(IdentityDbContext))]
+  [Migration("20210415125354_IdentityInit")]
+  partial class IdentityInit
+  {
+    protected override void BuildTargetModel(ModelBuilder modelBuilder)
     {
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasDefaultSchema("Identity")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.5")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+      modelBuilder
+          .HasDefaultSchema("Identity")
+          .HasAnnotation("Relational:MaxIdentifierLength", 128)
+          .HasAnnotation("ProductVersion", "5.0.5")
+          .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Actor.GameHub.Identity.EntityFrameworkCore.UserEntity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+      modelBuilder.Entity("Actor.GameHub.Identity.EntityFrameworkCore.UserEntity", b =>
+          {
+            b.Property<Guid>("Id")
+              .ValueGeneratedOnAdd()
+              .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+            b.Property<string>("Username")
+              .IsRequired()
+              .HasMaxLength(100)
+              .HasColumnType("nvarchar(100)");
 
-                    b.HasKey("Id");
+            b.HasKey("Id");
 
-                    b.HasIndex("Username")
-                        .IsUnique();
+            b.HasIndex("Username")
+              .IsUnique();
 
-                    b.ToTable("User");
+            b.ToTable("User");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("3212fed2-6246-46a4-8959-79748024418e"),
-                            Username = "lars"
-                        },
-                        new
-                        {
-                            Id = new Guid("57e16b30-16fb-4203-8f22-7417e3ad91de"),
-                            Username = "merten"
-                        },
-                        new
-                        {
-                            Id = new Guid("aa493230-83b1-4cf6-b1d8-69aaf98e767d"),
-                            Username = "sam"
-                        },
-                        new
-                        {
-                            Id = new Guid("a1bc719c-2726-482e-bec9-7f826838d35f"),
-                            Username = "uli"
-                        });
-                });
+            b.HasData(
+              new
+              {
+                Id = new Guid("3212fed2-6246-46a4-8959-79748024418e"),
+                Username = "lars"
+              },
+              new
+              {
+                Id = new Guid("57e16b30-16fb-4203-8f22-7417e3ad91de"),
+                Username = "merten"
+              },
+              new
+              {
+                Id = new Guid("aa493230-83b1-4cf6-b1d8-69aaf98e767d"),
+                Username = "sam"
+              },
+              new
+              {
+                Id = new Guid("a1bc719c-2726-482e-bec9-7f826838d35f"),
+                Username = "uli"
+              });
+          });
 #pragma warning restore 612, 618
-        }
     }
+  }
 }

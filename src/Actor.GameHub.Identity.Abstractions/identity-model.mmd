@@ -1,15 +1,15 @@
 sequenceDiagram
   participant o as Origin
   participant id as Identity
-  participant au as UserAuthenticator
-  participant lo as UserLoader
+  participant au as Authenticator
+  participant lo as Loader
 
   o->>id:LoginUser
   rect rgba(160, 160, 160, .2)
-    Note over id,au:start/watch UserAuthenticator
+    Note over id,au:start/watch Authenticator
     activate au
     id->>au:AuthUser
-    Note over au,lo:start/watch UserLoader
+    Note over au,lo:start/watch Loader
     activate lo
     au->>lo:LoadUserByUsernameForAuth
     alt Error in Login

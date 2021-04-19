@@ -7,7 +7,7 @@ namespace Actor.GameHub.Identity.Abstractions
     public static readonly string IdentityName = "Identity";
     public static readonly string IdentityPath = $"/user/{IdentityName}";
 
-    public static string UserLoaderName(Guid loadId) => $"UserLoader-{loadId}";
-    public static string UserAuthenticatorName(Guid authId) => $"UserAuthenticator-{authId}";
+    public static string AuthenticatorName(Guid authId) => $"Authenticator-{authId}";
+    public static string LoaderName(Guid loadId) => $"Loader-{loadId}";
   }
 }

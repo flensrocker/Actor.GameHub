@@ -6,11 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Actor.GameHub.Identity.EntityFrameworkCore
 {
-  public class DbIdentityRepository : IIdentityRepository
+  public class IdentityDbRepository : IIdentityRepository
   {
     private readonly IDbContextFactory<IdentityDbContext> _dbContextFactory;
 
-    public DbIdentityRepository(IDbContextFactory<IdentityDbContext> dbContextFactory)
+    public IdentityDbRepository(IDbContextFactory<IdentityDbContext> dbContextFactory)
     {
       _dbContextFactory = dbContextFactory;
     }
