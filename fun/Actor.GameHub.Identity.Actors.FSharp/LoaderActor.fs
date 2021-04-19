@@ -30,5 +30,5 @@ let loader allowedLoadId identityRepository (mailbox: Actor<_>) =
 
     loop ()
 
-let spawnLoader getIdentityRepository parent loadId =
-    spawnOpt parent (IdentityMetadata.LoaderName loadId) (loader loadId (getIdentityRepository ())) [ stoppingStrategy ]
+let spawnLoader newIdentityRepository parent loadId =
+    spawnOpt parent (IdentityMetadata.LoaderName loadId) (loader loadId (newIdentityRepository ())) [ stoppingStrategy ]

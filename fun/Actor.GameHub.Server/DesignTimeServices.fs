@@ -1,45 +1,28 @@
-﻿module Actor.GameHub.Identity.EntityFrameworkCore.DesignTimeServices
+﻿module Actor.GameHub.DesignTimeServices
 
-open System.Reflection
+open EntityFrameworkCore.FSharp
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.EntityFrameworkCore.Design
-open Microsoft.EntityFrameworkCore
-open EntityFrameworkCore.FSharp
-open Actor.GameHub.Identity.EntityFrameworkCore.IdentityDbContext
 
-let connectionString =
-    "Server=(localdb)\\MSSQLLocalDB;Database=ActorGameHub;Trusted_Connection=True;MultipleActiveResultSets=true"
+open Actor.GameHub
+open Actor.GameHub.Identity.EntityFrameworkCore.IdentityDbContext
 
 type IdentityDesignTimeDbContextFactory() =
     interface IDesignTimeDbContextFactory<IdentityDbContext> with
         member __.CreateDbContext(args: string []) =
-            let dbOptions =
-                (new DbContextOptionsBuilder<IdentityDbContext>())
-                    .UseSqlServer(
-                    connectionString,
-                    fun sqlOptions ->
-                        sqlOptions.MigrationsAssembly(
-                            Assembly
-                                .GetAssembly(
-                                    typedefof<IdentityDbContext>
-                                )
-                                .GetName()
-                                .Name
-                        )
-                        |> ignore
-                )
-                    .Options
-
-            new IdentityDbContext(dbOptions)
+            new IdentityDbContext(Configuration.dbOptions)
 
 type DesignTimeServices() =
     interface IDesignTimeServices with
         member __.ConfigureDesignTimeServices(serviceCollection: IServiceCollection) =
             let scaffoldOptions =
-                ScaffoldOptions (
+                ScaffoldOptions(
                     ScaffoldTypesAs = ScaffoldTypesAs.RecordType,
-                    ScaffoldNullableColumnsAs = ScaffoldNullableColumnsAs.OptionTypes)
+                    ScaffoldNullableColumnsAs = ScaffoldNullableColumnsAs.OptionTypes
+                )
 
-            let fSharpServices = EFCoreFSharpServices.WithScaffoldOptions scaffoldOptions
+            let fSharpServices =
+                EFCoreFSharpServices.WithScaffoldOptions scaffoldOptions
+
             fSharpServices.ConfigureDesignTimeServices serviceCollection
             ()

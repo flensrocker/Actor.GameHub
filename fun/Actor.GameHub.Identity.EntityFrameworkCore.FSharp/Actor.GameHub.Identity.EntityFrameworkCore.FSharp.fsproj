@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Entities.fs" />
     <Compile Include="IdentityDbContext.fs" />
+    <Compile Include="IdentityDbRepository.fs" />
     <Compile Include="Migrations/*.fs" />
   </ItemGroup>
 

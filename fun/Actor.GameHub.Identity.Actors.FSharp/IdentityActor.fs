@@ -3,6 +3,8 @@
 open System
 open Akka.FSharp
 open Akka.Actor
+open Akka.Cluster.Tools.PublishSubscribe
+open Akka.Cluster.Tools.Client
 
 open Actor.GameHub.Extensions
 open Actor.GameHub.Identity.Abstractions
@@ -97,7 +99,27 @@ let identity spawnAuthenticator (mailbox: Actor<_>) =
             return! loop (nextState state)
         }
 
+    logInfo mailbox "==> Identity started"
     loop initialIdentityState
 
 let spawnIdentity spawnAuthenticator system =
-    spawn system IdentityMetadata.IdentityName (identity spawnAuthenticator)
+    let identityRef =
+        spawn system IdentityMetadata.IdentityName (identity spawnAuthenticator)
+
+    DistributedPubSub.Get(system).Mediator
+    <! (new Put(identityRef))
+
+    ClusterClientReceptionist
+        .Get(system)
+        .RegisterService(identityRef)
+
+    system
+
+let addIdentityActors newIdentityRepository system =
+    let spawnLoader =
+        LoaderActor.spawnLoader newIdentityRepository
+
+    let spawnAuthenticator =
+        AuthenticatorActor.spawnAuthenticator spawnLoader
+
+    spawnIdentity spawnAuthenticator system
