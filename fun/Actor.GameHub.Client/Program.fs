@@ -24,13 +24,15 @@ let main argv =
         |> getConfig
         |> System.create "GameHubClient"
 
-    let clusterClient =
-        gameHubClientSystem.ActorOf(ClusterClient.Props(ClusterClientSettings.Create(gameHubClientSystem)))
-
     async {
+        let clusterClient =
+            gameHubClientSystem.ActorOf(ClusterClient.Props(ClusterClientSettings.Create(gameHubClientSystem)))
+
+        printfn "send request"
         let! response =
             clusterClient
             <? new ClusterClient.Send(IdentityMetadata.IdentityPath, LoginUserMsg(Guid.NewGuid(), "lars"))
+        printfn "got reply"
 
         match response with
         | UserLoginErrorMsg (loginId, errorMessage) -> printfn "error: %s" errorMessage
@@ -38,7 +40,10 @@ let main argv =
         | _ -> printfn "unknown response"
         |> ignore
     }
-    |> Async.RunSynchronously
+    |> Async.Start
+
+    printfn "waiting..."
+    let input = Console.ReadLine()
 
     gameHubClientSystem.Terminate()
     |> Async.AwaitTask

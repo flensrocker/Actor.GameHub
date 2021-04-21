@@ -1,5 +1,13 @@
 akka {
-    actor.provider = cluster
+    actor {
+        provider = cluster
+        serializers {
+            hyperion = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"
+        }
+        serialization-bindings {
+            "System.Object" = hyperion
+        }
+    }
     extensions = [
         "Akka.Cluster.Tools.Client.ClusterClientReceptionistExtensionProvider, Akka.Cluster.Tools",
         "Akka.Cluster.Tools.PublishSubscribe.DistributedPubSubExtensionProvider, Akka.Cluster.Tools"
