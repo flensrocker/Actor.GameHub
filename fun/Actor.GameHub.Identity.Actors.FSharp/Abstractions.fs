@@ -4,7 +4,6 @@ open System
 open Actor.GameHub.Identity.Abstractions
 
 type IdentityInternalMessage =
-    | IdentityPublicMessage of msg: IdentityPublicMessage
     | UserAuthErrorMsg of AuthId: Guid * ErrorMessage: string
     | UserAuthSuccessMsg of AuthId: Guid * User: User
     | AuthTerminated of AuthId: Guid

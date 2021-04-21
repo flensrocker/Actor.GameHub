@@ -39,7 +39,8 @@ let handleLogin spawnAuthenticator loginId username (mailbox: Actor<_>) state =
     match Map.containsKey authId state.AuthDataByAuthId with
     | true ->
         loginOrigin
-        <! UserLoginErrorMsg(loginId, "user loginId error, try again...")
+        <! { UserLoginId = loginId
+             ErrorMessage = "user loginId error, try again..." }
 
         state
     | false ->
@@ -68,7 +69,8 @@ let handleAuthSuccess authId user (mailbox: Actor<_>) state =
     | None -> state
     | Some loginData ->
         loginData.LoginOrigin
-        <! UserLoginSuccessMsg(loginData.LoginId, user)
+        <! { UserLoginId = loginData.LoginId
+             User = user }
 
         authRef |> mailbox.Unwatch |> mailbox.Context.Stop
         removeAuth authId state
@@ -78,7 +80,8 @@ let handleAuthTerminated authId state =
     | None -> state
     | Some authData ->
         authData.LoginOrigin
-        <! UserLoginErrorMsg(authData.LoginId, $"unexpected stop of authenticator {authId}")
+        <! { UserLoginId = authData.LoginId
+             ErrorMessage = $"unexpected stop of authenticator {authId}" }
 
         removeAuth authId state
 
@@ -88,13 +91,15 @@ let identity spawnAuthenticator (mailbox: Actor<_>) =
             let! msg = mailbox.Receive()
 
             let nextState =
-                match msg with
-                | UserAuthErrorMsg (authId, errorMessage) -> handleAuthError authId errorMessage mailbox
-                | UserAuthSuccessMsg (authId, user) -> handleAuthSuccess authId user mailbox
-                | AuthTerminated (authId) -> handleAuthTerminated authId
-                | IdentityPublicMessage pubMsg ->
-                    match pubMsg with
-                    | LoginUserMsg (loginId, username) -> handleLogin spawnAuthenticator loginId username mailbox
+                match box msg with
+                | :? IdentityInternalMessage as internMsg ->
+                    match internMsg with
+                    | UserAuthErrorMsg (authId, errorMessage) -> handleAuthError authId errorMessage mailbox
+                    | UserAuthSuccessMsg (authId, user) -> handleAuthSuccess authId user mailbox
+                    | AuthTerminated (authId) -> handleAuthTerminated authId
+                | :? LoginUserMsg as loginMsg ->
+                    handleLogin spawnAuthenticator loginMsg.UserLoginId loginMsg.Username mailbox
+                | _ -> id
 
             return! loop (nextState state)
         }

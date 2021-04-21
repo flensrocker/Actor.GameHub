@@ -29,14 +29,20 @@ let main argv =
             gameHubClientSystem.ActorOf(ClusterClient.Props(ClusterClientSettings.Create(gameHubClientSystem)))
 
         printfn "send request"
+
         let! response =
             clusterClient
-            <? new ClusterClient.Send(IdentityMetadata.IdentityPath, LoginUserMsg(Guid.NewGuid(), "lars"))
+            <? new ClusterClient.Send(
+                IdentityMetadata.IdentityPath,
+                { UserLoginId = Guid.NewGuid()
+                  Username = "lars" }
+            )
+
         printfn "got reply"
 
-        match response with
-        | UserLoginErrorMsg (loginId, errorMessage) -> printfn "error: %s" errorMessage
-        | UserLoginSuccessMsg (loginId, user) -> printfn "logged in: %s" user.Username
+        match box response with
+        | :? UserLoginErrorMsg as errorMsg -> printfn "error: %s" errorMsg.ErrorMessage
+        | :? UserLoginSuccessMsg as successMsg -> printfn "logged in: %s" successMsg.User.Username
         | _ -> printfn "unknown response"
         |> ignore
     }
