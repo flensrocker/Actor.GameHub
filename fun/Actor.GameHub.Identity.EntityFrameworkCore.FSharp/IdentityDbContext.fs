@@ -2,7 +2,8 @@
 
 open System
 open Microsoft.EntityFrameworkCore
-open Actor.GameHub.Identity.EntityFrameworkCore.Entities
+open Actor.GameHub.Identity.EntityFrameworkCore.UserEntity
+open System.Reflection
 
 type IdentityDbContext(dbOptions: DbContextOptions<IdentityDbContext>) =
     inherit DbContext(dbOptions)
@@ -15,33 +16,19 @@ type IdentityDbContext(dbOptions: DbContextOptions<IdentityDbContext>) =
         and set v = this._user <- v
 
     override this.OnModelCreating modelBuilder =
-        modelBuilder.HasDefaultSchema "Identity" |> ignore
-
-        let userBuilder = modelBuilder.Entity<UserEntity>()
-        userBuilder.ToTable "User" |> ignore
-
-        userBuilder.HasKey(nameof (Unchecked.defaultof<UserEntity>.Id))
+        modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly())
         |> ignore
 
-        userBuilder
-            .Property(nameof (Unchecked.defaultof<UserEntity>.Username))
-            .HasMaxLength(100)
-            .IsRequired()
-        |> ignore
-
-        userBuilder
-            .HasIndex(nameof (Unchecked.defaultof<UserEntity>.Username))
-            .IsUnique()
-        |> ignore
-
-        userBuilder.HasData(
-            { Id = Guid.NewGuid()
-              Username = "lars" },
-            { Id = Guid.NewGuid()
-              Username = "merten" },
-            { Id = Guid.NewGuid()
-              Username = "sam" },
-            { Id = Guid.NewGuid()
-              Username = "uli" }
-        )
+        modelBuilder
+            .Entity<UserEntity>()
+            .HasData(
+                { Id = Guid.NewGuid()
+                  Username = "lars" },
+                { Id = Guid.NewGuid()
+                  Username = "merten" },
+                { Id = Guid.NewGuid()
+                  Username = "sam" },
+                { Id = Guid.NewGuid()
+                  Username = "uli" }
+            )
         |> ignore

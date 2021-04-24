@@ -16,12 +16,11 @@ type IdentityDbContextModelSnapshot() =
     override this.BuildModel(modelBuilder: ModelBuilder) =
         modelBuilder
 
-            .HasDefaultSchema("Identity")
             .UseIdentityColumns().HasAnnotation("Relational:MaxIdentifierLength", 128)
             .HasAnnotation("ProductVersion", "5.0.5")
             |> ignore
 
-        modelBuilder.Entity("Actor.GameHub.Identity.EntityFrameworkCore.Entities+UserEntity", (fun b ->
+        modelBuilder.Entity("Actor.GameHub.Identity.EntityFrameworkCore.UserEntity+UserEntity", (fun b ->
 
             b.Property<Guid>("Id")
                 .ValueGeneratedOnAdd()
@@ -37,13 +36,13 @@ type IdentityDbContextModelSnapshot() =
             b.HasIndex("Username")
                 .IsUnique() |> ignore
 
-            b.ToTable("User") |> ignore
+            b.ToTable("User","Identity") |> ignore
 
             b.HasData([| 
-                {| Id = Guid("d727abca-c58a-42d8-9176-e21c4ac906c7"); Username = "lars"; |}
-                {| Id = Guid("5451dc48-749d-4d65-b7d3-06bc4853e74e"); Username = "merten"; |}
-                {| Id = Guid("8b00bc0c-da63-4be4-9265-cce94044f420"); Username = "sam"; |}
-                {| Id = Guid("1a58b2e7-43ca-4c4c-a188-40ff58e33312"); Username = "uli"; |}
+                {| Id = Guid("ac0bdea1-5135-4a88-9e73-0baae707c4d9"); Username = "lars"; |}
+                {| Id = Guid("38f4449c-8a87-42f9-aaaf-912212eb33c9"); Username = "merten"; |}
+                {| Id = Guid("3e1b64c9-c909-44b8-9649-6ef836a49c52"); Username = "sam"; |}
+                {| Id = Guid("ca58076f-cf6d-45d4-9469-3537bcc50b2d"); Username = "uli"; |}
              |]) |> ignore
 
         )) |> ignore

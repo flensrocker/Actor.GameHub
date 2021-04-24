@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Entities.fs" />
+    <Compile Include="IdentityDbConstants.fs" />
+    <Compile Include="UserEntity.fs" />
     <Compile Include="IdentityDbContext.fs" />
     <Compile Include="IdentityDbRepository.fs" />
     <Compile Include="Migrations/*.fs" />
