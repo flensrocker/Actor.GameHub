@@ -3,17 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.6.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.Abstractions.FSharp", "fun\Actor.GameHub.Identity.Abstractions.FSharp\Actor.GameHub.Identity.Abstractions.FSharp.fsproj", "{0977F8C1-2A07-46FD-833B-F6CA1FD96C9E}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.Abstractions.FSharp", "Actor.GameHub.Identity.Abstractions.FSharp\Actor.GameHub.Identity.Abstractions.FSharp.fsproj", "{0977F8C1-2A07-46FD-833B-F6CA1FD96C9E}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.Actors.FSharp", "fun\Actor.GameHub.Identity.Actors.FSharp\Actor.GameHub.Identity.Actors.FSharp.fsproj", "{81D1E99B-2A6F-4729-B842-710D46252DB0}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.Actors.FSharp", "Actor.GameHub.Identity.Actors.FSharp\Actor.GameHub.Identity.Actors.FSharp.fsproj", "{81D1E99B-2A6F-4729-B842-710D46252DB0}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Extensions.FSharp", "fun\Actor.GameHub.Extensions.FSharp\Actor.GameHub.Extensions.FSharp.fsproj", "{256731BB-79BB-41E3-A405-FD96A00E2352}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Extensions.FSharp", "Actor.GameHub.Extensions.FSharp\Actor.GameHub.Extensions.FSharp.fsproj", "{256731BB-79BB-41E3-A405-FD96A00E2352}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Server", "fun\Actor.GameHub.Server\Actor.GameHub.Server.fsproj", "{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Server", "Actor.GameHub.Server\Actor.GameHub.Server.fsproj", "{0CE6ACFF-6E38-468A-85B1-5DC76293EE99}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.EntityFrameworkCore.FSharp", "fun\Actor.GameHub.Identity.EntityFrameworkCore.FSharp\Actor.GameHub.Identity.EntityFrameworkCore.FSharp.fsproj", "{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Identity.EntityFrameworkCore.FSharp", "Actor.GameHub.Identity.EntityFrameworkCore.FSharp\Actor.GameHub.Identity.EntityFrameworkCore.FSharp.fsproj", "{563D8A2B-B227-4FB5-8C4B-0B13C4F7FCBD}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Client", "fun\Actor.GameHub.Client\Actor.GameHub.Client.fsproj", "{A76C0CCA-EAE7-4C82-A69E-D2E23AD784F1}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Actor.GameHub.Client", "Actor.GameHub.Client\Actor.GameHub.Client.fsproj", "{A76C0CCA-EAE7-4C82-A69E-D2E23AD784F1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
