@@ -3,11 +3,7 @@ using Orleans;
 
 namespace Actor.GameHub.Identity.Abstractions
 {
-  /// <summary>
-  /// primary key: username
-  /// Mapping of username to PlayerId
-  /// </summary>
-  public interface IPlayerRegistry : IGrainWithStringKey
+  public interface IPlayerByUsername : IGrainWithStringKey
   {
     [Transaction(TransactionOption.Create)]
     Task<RegisterResponse> Register(RegisterRequest request);

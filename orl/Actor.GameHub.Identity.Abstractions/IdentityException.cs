@@ -13,6 +13,7 @@ namespace Actor.GameHub.Identity.Abstractions
     }
   }
 
+  [Serializable]
   public class IdentityBadRequestException : IdentityException
   {
     public IdentityBadRequestException(string message)
@@ -21,6 +22,7 @@ namespace Actor.GameHub.Identity.Abstractions
     }
   }
 
+  [Serializable]
   public class IdentityForbiddenException : IdentityException
   {
     public IdentityForbiddenException(string message)
@@ -29,6 +31,7 @@ namespace Actor.GameHub.Identity.Abstractions
     }
   }
 
+  [Serializable]
   public class IdentityNotFoundException : IdentityException
   {
     public IdentityNotFoundException(string message)

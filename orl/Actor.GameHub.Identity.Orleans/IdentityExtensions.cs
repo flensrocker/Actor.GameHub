@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
+using Actor.GameHub.Identity.Abstractions;
 using Orleans;
 using Orleans.Hosting;
 
@@ -7,8 +9,8 @@ namespace Actor.GameHub.Identity.Orleans
   public static class IdentityExtensions
   {
     public const string StorageName = "IdentityStorage";
-    public const string PlayerRegistryStorage = "PlayerRegistryState";
-    public const string PlayerAuthStorage = "PlayerAuthState";
+    public const string PlayerByUsernameStorage = "PlayerByUsernameState";
+    public const string PlayerByIdStorage = "PlayerByIdState";
 
     public static ISiloBuilder AddIdentity(this ISiloBuilder siloBuilder, string azureStorageConnectionString)
     {
@@ -24,6 +26,12 @@ namespace Actor.GameHub.Identity.Orleans
         });
       return siloBuilder;
     }
+
+    public static IPlayerByUsername GetPlayerByUsername(this IGrainFactory factory, string username)
+      => factory.GetGrain<IPlayerByUsername>(username.ToLowerInvariant());
+
+    public static IPlayerById GetPlayerById(this IGrainFactory factory, Guid playerId)
+      => factory.GetGrain<IPlayerById>(playerId);
 
     public static bool PasswordIsValid(string password)
     {

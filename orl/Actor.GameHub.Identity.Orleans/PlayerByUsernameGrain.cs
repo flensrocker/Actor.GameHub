@@ -6,16 +6,16 @@ using Orleans.Transactions.Abstractions;
 
 namespace Actor.GameHub.Identity.Orleans
 {
-  public class PlayerRegistryState
+  public class PlayerByUsernameState
   {
     public Guid PlayerId { get; set; }
   }
 
-  public class PlayerRegistryGrain : Grain, IPlayerRegistry
+  public class PlayerByUsernameGrain : Grain, IPlayerByUsername
   {
-    private readonly ITransactionalState<PlayerRegistryState> _state;
+    private readonly ITransactionalState<PlayerByUsernameState> _state;
 
-    public PlayerRegistryGrain([TransactionalState(IdentityExtensions.PlayerRegistryStorage, IdentityExtensions.StorageName)] ITransactionalState<PlayerRegistryState> state)
+    public PlayerByUsernameGrain([TransactionalState(IdentityExtensions.PlayerByUsernameStorage, IdentityExtensions.StorageName)] ITransactionalState<PlayerByUsernameState> state)
     {
       _state = state;
     }
@@ -30,7 +30,7 @@ namespace Actor.GameHub.Identity.Orleans
         throw new IdentityBadRequestException("password is invalid");
 
       var newPlayerId = Guid.NewGuid();
-      var authenticator = GrainFactory.GetGrain<IPlayerAuthenticator>(newPlayerId);
+      var authenticator = GrainFactory.GetPlayerById(newPlayerId);
       await authenticator.Register(request);
 
       await _state.PerformUpdate(s =>
@@ -53,7 +53,7 @@ namespace Actor.GameHub.Identity.Orleans
       if (playerId == Guid.Empty)
         throw new IdentityNotFoundException("player not found");
 
-      var authenticator = GrainFactory.GetGrain<IPlayerAuthenticator>(playerId);
+      var authenticator = GrainFactory.GetPlayerById(playerId);
       return await authenticator.PasswordLogin(request);
     }
 

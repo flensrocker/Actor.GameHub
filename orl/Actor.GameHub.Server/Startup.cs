@@ -1,4 +1,5 @@
 using Actor.GameHub.Identity.Abstractions;
+using Actor.GameHub.Identity.Orleans;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -25,15 +26,22 @@ namespace Actor.GameHub.Server
 
       app.UseEndpoints(endpoints =>
       {
-        endpoints.MapPost("/api/Identity/PlayerRegistry/Register", async context =>
+        endpoints.MapPost("/api/Identity/Player/Register", async context =>
         {
-          var registerRequest = await context.Request.ReadFromJsonAsync<RegisterRequest>();
+          try
+          {
+            var registerRequest = await context.Request.ReadFromJsonAsync<RegisterRequest>();
 
-          var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
-          var playerRegistry = clusterClient.GetGrain<IPlayerRegistry>(registerRequest.Name);
-          var registerResponse = await playerRegistry.Register(registerRequest);
-
-          await context.Response.WriteAsJsonAsync(registerResponse);
+            var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
+            var playerRegistry = clusterClient.GetPlayerByUsername(registerRequest.Name);
+            var registerResponse = await playerRegistry.Register(registerRequest);
+            await context.Response.WriteAsJsonAsync(registerResponse);
+          }
+          catch (IdentityException iex)
+          {
+            context.Response.StatusCode = iex.StatusCode;
+            await context.Response.WriteAsJsonAsync(new { ErrorMessage = iex.Message });
+          }
         });
       });
     }

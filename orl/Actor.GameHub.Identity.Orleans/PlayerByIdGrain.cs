@@ -6,29 +6,29 @@ using Orleans.Transactions.Abstractions;
 
 namespace Actor.GameHub.Identity.Orleans
 {
-  public class PlayerAuthState
+  public class PlayerByIdState
   {
     public string Name { get; set; }
     public string PasswordHash { get; set; }
     public DateTime? LastLoginAt { get; set; }
   }
 
-  public class PlayerAuthenticatorGrain : Grain, IPlayerAuthenticator
+  public class PlayerByIdGrain : Grain, IPlayerById
   {
-    private readonly ITransactionalState<PlayerAuthState> _authState;
+    private readonly ITransactionalState<PlayerByIdState> _state;
 
-    public PlayerAuthenticatorGrain([TransactionalState(IdentityExtensions.PlayerAuthStorage, IdentityExtensions.StorageName)] ITransactionalState<PlayerAuthState> authState)
+    public PlayerByIdGrain([TransactionalState(IdentityExtensions.PlayerByIdStorage, IdentityExtensions.StorageName)] ITransactionalState<PlayerByIdState> authState)
     {
-      _authState = authState;
+      _state = authState;
     }
 
     public async Task Register(RegisterRequest request)
     {
-      var name = await _authState.PerformRead(s => s.Name);
+      var name = await _state.PerformRead(s => s.Name);
       if (!string.IsNullOrWhiteSpace(name))
         throw new IdentityBadRequestException("player-id collision, try again");
 
-      await _authState.PerformUpdate(s =>
+      await _state.PerformUpdate(s =>
       {
         s.Name = request.Name;
         s.PasswordHash = IdentityExtensions.HashPassword(request.Password);
@@ -37,7 +37,7 @@ namespace Actor.GameHub.Identity.Orleans
 
     public async Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request)
     {
-      var player = await _authState.PerformRead(s => new
+      var player = await _state.PerformRead(s => new
       {
         s.Name,
         s.PasswordHash,
@@ -45,7 +45,7 @@ namespace Actor.GameHub.Identity.Orleans
       if (!IdentityExtensions.VerifyPassword(request.Password, player.PasswordHash))
         throw new IdentityForbiddenException("password is wrong");
 
-      await _authState.PerformUpdate(s =>
+      await _state.PerformUpdate(s =>
       {
         s.LastLoginAt = DateTime.UtcNow;
       });
@@ -63,22 +63,22 @@ namespace Actor.GameHub.Identity.Orleans
       if (string.IsNullOrWhiteSpace(request.NewName))
         throw new IdentityBadRequestException("name is required");
 
-      var name = await _authState.PerformRead(s => s.Name);
+      var name = await _state.PerformRead(s => s.Name);
       if (name == request.NewName)
         return;
 
-      var newPlayer = GrainFactory.GetGrain<IPlayerRegistry>(request.NewName);
+      var newPlayer = GrainFactory.GetPlayerByUsername(request.NewName);
       await newPlayer.SetPlayerId(new SetPlayerIdRequest
       {
         PlayerId = this.GetPrimaryKey(),
       });
 
-      await _authState.PerformUpdate(s =>
+      await _state.PerformUpdate(s =>
       {
         s.Name = request.NewName;
       });
 
-      var oldPlayer = GrainFactory.GetGrain<IPlayerRegistry>(name);
+      var oldPlayer = GrainFactory.GetPlayerByUsername(name);
       await oldPlayer.Delete();
     }
 
@@ -87,11 +87,11 @@ namespace Actor.GameHub.Identity.Orleans
       if (!IdentityExtensions.PasswordIsValid(request.NewPassword))
         throw new IdentityBadRequestException("new password is invalid");
 
-      var passwordHash = await _authState.PerformRead(s => s.PasswordHash);
+      var passwordHash = await _state.PerformRead(s => s.PasswordHash);
       if (!IdentityExtensions.VerifyPassword(request.OldPassword, passwordHash))
         throw new IdentityForbiddenException("old password is invalid");
 
-      await _authState.PerformUpdate(s =>
+      await _state.PerformUpdate(s =>
       {
         s.PasswordHash = IdentityExtensions.HashPassword(request.NewPassword);
       });
