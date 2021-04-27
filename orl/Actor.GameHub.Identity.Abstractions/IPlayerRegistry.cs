@@ -13,8 +13,11 @@ namespace Actor.GameHub.Identity.Abstractions
     Task<RegisterResponse> Register(RegisterRequest request);
 
     [Transaction(TransactionOption.Join)]
-    Task SetPlayer(SetPlayerRequest request);
+    Task SetPlayerId(SetPlayerIdRequest request);
     [Transaction(TransactionOption.Join)]
     Task Delete();
+
+    [Transaction(TransactionOption.Supported)]
+    Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request);
   }
 }

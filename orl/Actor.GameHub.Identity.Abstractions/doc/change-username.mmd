@@ -1,0 +1,24 @@
+﻿sequenceDiagram
+  participant f as Frontend
+  participant pr as PlayerRegistry (by username)
+  participant pa as PlayerAuthenticator (by playerId)
+
+  Note over f,pa:change username for playerId
+  f->>pa:ChangeName
+  alt if new username is invalid
+    pa->>f:throw bad request
+  else if new username is same
+    pa->>f:success
+  else
+    pa->>pr:SetPlayerId for new username
+    alt if user already taken (non empty playerId)
+      pr->>f:throw bad request
+    else
+      Note over pr:update playerId
+      pr->>pa:success
+      Note over pa:update username
+      pa->>pr:delete old username
+      pr->>pa:success
+      pa->>f:success
+    end
+  end

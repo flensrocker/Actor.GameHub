@@ -10,15 +10,14 @@ namespace Actor.GameHub.Identity.Abstractions
   public class RegisterResponse
   {
     public Guid PlayerId { get; init; }
-    public string Name { get; init; }
   }
 
-  public class SetPlayerRequest
+  public class SetPlayerIdRequest
   {
     public Guid PlayerId { get; init; }
   }
 
-  public class SetNameRequest
+  public class ChangeNameRequest
   {
     public string NewName { get; init; }
   }

@@ -1,0 +1,21 @@
+﻿sequenceDiagram
+  participant f as Frontend
+  participant pr as PlayerRegistry (by username)
+  participant pa as PlayerAuthenticator (by playerId)
+
+  Note over f,pa:register new player
+  f->>pr:Register
+  Note over pr:Map username to playerId
+  alt if playerId is not empty or password invalid
+    pr->>f:throw bad request
+  else
+    Note over pr:create new playerId
+    pr->>pa:Register
+    alt if playerId has already a name
+      pa->>f:throw bad request (playerId collision)
+    else
+      Note over pa:save player
+      pa->>pr:success
+    end
+    pr->>f:return playerId
+  end

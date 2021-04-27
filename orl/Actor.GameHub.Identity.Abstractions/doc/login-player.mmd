@@ -1,0 +1,22 @@
+﻿sequenceDiagram
+  participant f as Frontend
+  participant pr as PlayerRegistry (by username)
+  participant pa as PlayerAuthenticator (by playerId)
+
+  Note over f,pa:login existing player with password
+  f->>pr:PasswordLogin
+  Note over pr:Map username to playerId
+  alt if playerId is empty
+    pr->>f:throw not found
+  else if password is empty
+    pr->>f:throw bad request
+  else
+    pr->>pa:PasswordLogin
+    alt if password is wrong
+      pa->>f:throw forbidden
+    else
+      Note over pa:update last login time, create auth-token
+      pa->>pr:return username, auth-token
+    end
+    pr->>f:return username, auth-token
+  end

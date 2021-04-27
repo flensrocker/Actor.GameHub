@@ -9,10 +9,10 @@ namespace Actor.GameHub.Identity.Abstractions
   public interface IPlayerAuthenticator : IGrainWithGuidKey
   {
     [Transaction(TransactionOption.Join)]
-    Task<RegisterResponse> Register(RegisterRequest request);
+    Task Register(RegisterRequest request);
 
     [Transaction(TransactionOption.Create)]
-    Task SetName(SetNameRequest request);
+    Task ChangeName(ChangeNameRequest request);
 
     [Transaction(TransactionOption.Supported)]
     Task ChangePassword(ChangePasswordRequest request);

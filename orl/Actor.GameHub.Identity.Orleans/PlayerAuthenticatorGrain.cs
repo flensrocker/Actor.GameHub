@@ -22,29 +22,43 @@ namespace Actor.GameHub.Identity.Orleans
       _authState = authState;
     }
 
-    public async Task<RegisterResponse> Register(RegisterRequest request)
+    public async Task Register(RegisterRequest request)
     {
       var name = await _authState.PerformRead(s => s.Name);
       if (!string.IsNullOrWhiteSpace(name))
         throw new IdentityBadRequestException("player-id collision, try again");
-
-      if (!IdentityExtensions.PasswordIsValid(request.Password))
-        throw new IdentityBadRequestException("password is invalid");
 
       await _authState.PerformUpdate(s =>
       {
         s.Name = request.Name;
         s.PasswordHash = IdentityExtensions.HashPassword(request.Password);
       });
+    }
 
-      return new RegisterResponse
+    public async Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request)
+    {
+      var player = await _authState.PerformRead(s => new
+      {
+        s.Name,
+        s.PasswordHash,
+      });
+      if (!IdentityExtensions.VerifyPassword(request.Password, player.PasswordHash))
+        throw new IdentityForbiddenException("password is wrong");
+
+      await _authState.PerformUpdate(s =>
+      {
+        s.LastLoginAt = DateTime.UtcNow;
+      });
+
+      return new PasswordLoginResponse
       {
         PlayerId = this.GetPrimaryKey(),
-        Name = request.Name,
+        Name = player.Name,
+        AuthToken = "TODO",
       };
     }
 
-    public async Task SetName(SetNameRequest request)
+    public async Task ChangeName(ChangeNameRequest request)
     {
       if (string.IsNullOrWhiteSpace(request.NewName))
         throw new IdentityBadRequestException("name is required");
@@ -54,7 +68,7 @@ namespace Actor.GameHub.Identity.Orleans
         return;
 
       var newPlayer = GrainFactory.GetGrain<IPlayerRegistry>(request.NewName);
-      await newPlayer.SetPlayer(new SetPlayerRequest
+      await newPlayer.SetPlayerId(new SetPlayerIdRequest
       {
         PlayerId = this.GetPrimaryKey(),
       });
@@ -81,32 +95,6 @@ namespace Actor.GameHub.Identity.Orleans
       {
         s.PasswordHash = IdentityExtensions.HashPassword(request.NewPassword);
       });
-    }
-
-    public async Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request)
-    {
-      if (string.IsNullOrWhiteSpace(request.Password))
-        throw new IdentityBadRequestException("password is missing");
-
-      var player = await _authState.PerformRead(s => new
-      {
-        s.Name,
-        s.PasswordHash,
-      });
-      if (!IdentityExtensions.VerifyPassword(request.Password, player.PasswordHash))
-        throw new IdentityForbiddenException("password is wrong");
-
-      await _authState.PerformUpdate(s =>
-      {
-        s.LastLoginAt = DateTime.UtcNow;
-      });
-
-      return new PasswordLoginResponse
-      {
-        PlayerId = this.GetPrimaryKey(),
-        Name = player.Name,
-        AuthToken = "TODO",
-      };
     }
   }
 }

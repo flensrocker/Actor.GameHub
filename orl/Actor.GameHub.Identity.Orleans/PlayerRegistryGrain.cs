@@ -31,17 +31,33 @@ namespace Actor.GameHub.Identity.Orleans
 
       var newPlayerId = Guid.NewGuid();
       var authenticator = GrainFactory.GetGrain<IPlayerAuthenticator>(newPlayerId);
-      var response = await authenticator.Register(request);
+      await authenticator.Register(request);
 
       await _state.PerformUpdate(s =>
       {
         s.PlayerId = newPlayerId;
       });
 
-      return response;
+      return new RegisterResponse
+      {
+        PlayerId = newPlayerId,
+      };
     }
 
-    public async Task SetPlayer(SetPlayerRequest request)
+    public async Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request)
+    {
+      if (string.IsNullOrWhiteSpace(request.Password))
+        throw new IdentityBadRequestException("password is missing");
+
+      var playerId = await _state.PerformRead(s => s.PlayerId);
+      if (playerId == Guid.Empty)
+        throw new IdentityNotFoundException("player not found");
+
+      var authenticator = GrainFactory.GetGrain<IPlayerAuthenticator>(playerId);
+      return await authenticator.PasswordLogin(request);
+    }
+
+    public async Task SetPlayerId(SetPlayerIdRequest request)
     {
       var playerId = await _state.PerformRead(s => s.PlayerId);
       if (playerId != Guid.Empty)
@@ -55,6 +71,7 @@ namespace Actor.GameHub.Identity.Orleans
 
     public async Task Delete()
     {
+      // there is no "PerformDelete", see https://github.com/dotnet/orleans/issues/5448
       await _state.PerformUpdate(s =>
       {
         s.PlayerId = Guid.Empty;
