@@ -1,20 +1,19 @@
+using Actor.GameHub.Identity.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Orleans;
 
 namespace Actor.GameHub.Server
 {
   public class Startup
   {
-    // This method gets called by the runtime. Use this method to add services to the container.
-    // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
     public void ConfigureServices(IServiceCollection services)
     {
     }
 
-    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
       if (env.IsDevelopment())
@@ -26,10 +25,16 @@ namespace Actor.GameHub.Server
 
       app.UseEndpoints(endpoints =>
       {
-        endpoints.MapGet("/", async context =>
-              {
-                await context.Response.WriteAsync("Hello World!");
-              });
+        endpoints.MapPost("/api/Identity/PlayerRegistry/Register", async context =>
+        {
+          var registerRequest = await context.Request.ReadFromJsonAsync<RegisterRequest>();
+
+          var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
+          var playerRegistry = clusterClient.GetGrain<IPlayerRegistry>(registerRequest.Name);
+          var registerResponse = await playerRegistry.Register(registerRequest);
+
+          await context.Response.WriteAsJsonAsync(registerResponse);
+        });
       });
     }
   }
