@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Actor.GameHub.Identity.Abstractions;
 using Orleans;
-using Orleans.Runtime;
 using Orleans.Transactions.Abstractions;
 
 namespace Actor.GameHub.Identity.Orleans

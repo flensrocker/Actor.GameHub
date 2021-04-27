@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.Clustering.AzureStorage" Version="3.4.2" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="3.4.2" />
+    <PackageReference Include="Microsoft.Orleans.Transactions.AzureStorage" Version="3.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Actor.GameHub.Identity.Orleans\Actor.GameHub.Identity.Orleans.csproj" />
   </ItemGroup>
 
