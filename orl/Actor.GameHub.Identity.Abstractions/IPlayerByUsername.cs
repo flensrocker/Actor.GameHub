@@ -13,7 +13,7 @@ namespace Actor.GameHub.Identity.Abstractions
     [Transaction(TransactionOption.Join)]
     Task<IdentityError> Delete();
 
-    [Transaction(TransactionOption.Supported)]
+    [Transaction(TransactionOption.Create)]
     Task<(IdentityError Error, PasswordLoginResponse Response)> PasswordLogin(PasswordLoginRequest request);
   }
 }

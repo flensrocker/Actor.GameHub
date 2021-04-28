@@ -5,7 +5,7 @@ namespace Actor.GameHub.Identity.Abstractions
   [Serializable]
   public class RegisterRequest
   {
-    public string Name { get; init; }
+    public string Username { get; init; }
     public string Password { get; init; }
   }
 
@@ -22,9 +22,9 @@ namespace Actor.GameHub.Identity.Abstractions
   }
 
   [Serializable]
-  public class ChangeNameRequest
+  public class ChangeUsernameRequest
   {
-    public string NewName { get; init; }
+    public string NewUsername { get; init; }
   }
 
   [Serializable]
@@ -37,6 +37,7 @@ namespace Actor.GameHub.Identity.Abstractions
   [Serializable]
   public class PasswordLoginRequest
   {
+    public string Username { get; init; }
     public string Password { get; init; }
   }
 
@@ -44,7 +45,7 @@ namespace Actor.GameHub.Identity.Abstractions
   public class PasswordLoginResponse
   {
     public Guid PlayerId { get; init; }
-    public string Name { get; init; }
+    public string Username { get; init; }
     public string AuthToken { get; init; }
   }
 }

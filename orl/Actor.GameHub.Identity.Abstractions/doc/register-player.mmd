@@ -11,7 +11,7 @@
   else
     Note over pr:create new playerId
     pr->>pa:Register
-    alt if playerId has already a name
+    alt if playerId has already a username
       pa->>f:throw bad request (playerId collision)
     else
       Note over pa:save player

@@ -31,16 +31,34 @@ namespace Actor.GameHub.Server
           var registerRequest = await context.Request.ReadFromJsonAsync<RegisterRequest>();
 
           var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
-          var playerRegistry = clusterClient.GetPlayerByUsername(registerRequest.Name);
-          var (registerError, registerResponse) = await playerRegistry.Register(registerRequest);
-          if (registerError is not null)
+          var playerRegistry = clusterClient.GetPlayerByUsername(registerRequest.Username);
+          var (error, response) = await playerRegistry.Register(registerRequest);
+          if (error is not null)
           {
-            context.Response.StatusCode = registerError.StatusCode;
-            await context.Response.WriteAsJsonAsync(new { ErrorMessage = registerError.Message });
+            context.Response.StatusCode = error.StatusCode;
+            await context.Response.WriteAsJsonAsync(new { ErrorMessage = error.Message });
           }
           else
           {
-            await context.Response.WriteAsJsonAsync(registerResponse);
+            await context.Response.WriteAsJsonAsync(response);
+          }
+        });
+
+        endpoints.MapPost("/api/Identity/Player/PasswordLogin", async context =>
+        {
+          var loginRequest = await context.Request.ReadFromJsonAsync<PasswordLoginRequest>();
+
+          var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
+          var playerRegistry = clusterClient.GetPlayerByUsername(loginRequest.Username);
+          var (error, response) = await playerRegistry.PasswordLogin(loginRequest);
+          if (error is not null)
+          {
+            context.Response.StatusCode = error.StatusCode;
+            await context.Response.WriteAsJsonAsync(new { ErrorMessage = error.Message });
+          }
+          else
+          {
+            await context.Response.WriteAsJsonAsync(response);
           }
         });
       });

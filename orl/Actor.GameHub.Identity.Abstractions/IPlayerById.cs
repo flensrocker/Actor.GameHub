@@ -9,12 +9,12 @@ namespace Actor.GameHub.Identity.Abstractions
     Task<IdentityError> Register(RegisterRequest request);
 
     [Transaction(TransactionOption.Create)]
-    Task<IdentityError> ChangeName(ChangeNameRequest request);
+    Task<IdentityError> ChangeUsername(ChangeUsernameRequest request);
 
-    [Transaction(TransactionOption.Supported)]
+    [Transaction(TransactionOption.Create)]
     Task<IdentityError> ChangePassword(ChangePasswordRequest request);
 
-    [Transaction(TransactionOption.Supported)]
+    [Transaction(TransactionOption.Join)]
     Task<(IdentityError Error, PasswordLoginResponse Response)> PasswordLogin(PasswordLoginRequest request);
   }
 }

@@ -8,7 +8,7 @@ namespace Actor.GameHub.Identity.Orleans
 {
   public class PlayerByIdState
   {
-    public string Name { get; set; }
+    public string Username { get; set; }
     public string PasswordHash { get; set; }
     public DateTime? LastLoginAt { get; set; }
   }
@@ -24,13 +24,13 @@ namespace Actor.GameHub.Identity.Orleans
 
     public async Task<IdentityError> Register(RegisterRequest request)
     {
-      var name = await _state.PerformRead(s => s.Name);
+      var name = await _state.PerformRead(s => s.Username);
       if (!string.IsNullOrWhiteSpace(name))
         return IdentityError.BadRequest("player-id collision, try again");
 
       await _state.PerformUpdate(s =>
       {
-        s.Name = request.Name;
+        s.Username = request.Username;
         s.PasswordHash = IdentityExtensions.HashPassword(request.Password);
       });
 
@@ -41,7 +41,7 @@ namespace Actor.GameHub.Identity.Orleans
     {
       var player = await _state.PerformRead(s => new
       {
-        s.Name,
+        s.Username,
         s.PasswordHash,
       });
       if (!IdentityExtensions.VerifyPassword(request.Password, player.PasswordHash))
@@ -55,21 +55,21 @@ namespace Actor.GameHub.Identity.Orleans
       return (null, new PasswordLoginResponse
       {
         PlayerId = this.GetPrimaryKey(),
-        Name = player.Name,
+        Username = player.Username,
         AuthToken = "TODO",
       });
     }
 
-    public async Task<IdentityError> ChangeName(ChangeNameRequest request)
+    public async Task<IdentityError> ChangeUsername(ChangeUsernameRequest request)
     {
-      if (string.IsNullOrWhiteSpace(request.NewName))
+      if (string.IsNullOrWhiteSpace(request.NewUsername))
         return IdentityError.BadRequest("name is required");
 
-      var name = await _state.PerformRead(s => s.Name);
-      if (name == request.NewName)
+      var name = await _state.PerformRead(s => s.Username);
+      if (name == request.NewUsername)
         return null;
 
-      var newPlayer = GrainFactory.GetPlayerByUsername(request.NewName);
+      var newPlayer = GrainFactory.GetPlayerByUsername(request.NewUsername);
       var error = await newPlayer.SetPlayerId(new SetPlayerIdRequest
       {
         PlayerId = this.GetPrimaryKey(),
@@ -79,7 +79,7 @@ namespace Actor.GameHub.Identity.Orleans
 
       await _state.PerformUpdate(s =>
       {
-        s.Name = request.NewName;
+        s.Username = request.NewUsername;
       });
 
       var oldPlayer = GrainFactory.GetPlayerByUsername(name);

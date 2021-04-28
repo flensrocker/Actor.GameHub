@@ -4,7 +4,7 @@
   participant pa as PlayerAuthenticator (by playerId)
 
   Note over f,pa:change username for playerId
-  f->>pa:ChangeName
+  f->>pa:ChangeUsername
   alt if new username is invalid
     pa->>f:throw bad request
   else if new username is same
