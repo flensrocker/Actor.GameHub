@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Orle
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Server", "Actor.GameHub.Server\Actor.GameHub.Server.csproj", "{281B1947-947B-4BB4-9C41-19E026F9AB41}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.AspNetCore", "Actor.GameHub.Identity.AspNetCore\Actor.GameHub.Identity.AspNetCore.csproj", "{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{281B1947-947B-4BB4-9C41-19E026F9AB41}.Release|x64.Build.0 = Release|Any CPU
 		{281B1947-947B-4BB4-9C41-19E026F9AB41}.Release|x86.ActiveCfg = Release|Any CPU
 		{281B1947-947B-4BB4-9C41-19E026F9AB41}.Release|x86.Build.0 = Release|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Debug|x64.Build.0 = Debug|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Debug|x86.Build.0 = Debug|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Release|x64.ActiveCfg = Release|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Release|x64.Build.0 = Release|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Release|x86.ActiveCfg = Release|Any CPU
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

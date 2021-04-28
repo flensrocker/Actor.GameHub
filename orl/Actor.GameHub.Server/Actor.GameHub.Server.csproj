@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Actor.GameHub.Identity.AspNetCore\Actor.GameHub.Identity.AspNetCore.csproj" />
     <ProjectReference Include="..\Actor.GameHub.Identity.Orleans\Actor.GameHub.Identity.Orleans.csproj" />
   </ItemGroup>
 

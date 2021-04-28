@@ -15,7 +15,7 @@ namespace Actor.GameHub.Identity.Orleans
   {
     private readonly ITransactionalState<PlayerByUsernameState> _state;
 
-    public PlayerByUsernameGrain([TransactionalState(IdentityExtensions.PlayerByUsernameStorage, IdentityExtensions.StorageName)] ITransactionalState<PlayerByUsernameState> state)
+    public PlayerByUsernameGrain([TransactionalState(IdentityOrleansExtensions.PlayerByUsernameStorage, IdentityOrleansExtensions.StorageName)] ITransactionalState<PlayerByUsernameState> state)
     {
       _state = state;
     }
@@ -26,7 +26,7 @@ namespace Actor.GameHub.Identity.Orleans
       if (playerId != Guid.Empty)
         return (IdentityError.BadRequest("name already taken"), null);
 
-      if (!IdentityExtensions.PasswordIsValid(request.Password))
+      if (!IdentityOrleansExtensions.PasswordIsValid(request.Password))
         return (IdentityError.BadRequest("password is invalid"), null);
 
       var newPlayerId = Guid.NewGuid();

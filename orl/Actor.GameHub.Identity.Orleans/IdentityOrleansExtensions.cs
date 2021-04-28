@@ -1,12 +1,10 @@
-﻿using System;
-using System.Reflection;
-using Actor.GameHub.Identity.Abstractions;
+﻿using System.Reflection;
 using Orleans;
 using Orleans.Hosting;
 
 namespace Actor.GameHub.Identity.Orleans
 {
-  public static class IdentityExtensions
+  public static class IdentityOrleansExtensions
   {
     public const string StorageName = "IdentityStorage";
     public const string PlayerByUsernameStorage = "PlayerByUsernameState";
@@ -26,12 +24,6 @@ namespace Actor.GameHub.Identity.Orleans
         });
       return siloBuilder;
     }
-
-    public static IPlayerByUsername GetPlayerByUsername(this IGrainFactory factory, string username)
-      => factory.GetGrain<IPlayerByUsername>(username.ToLowerInvariant());
-
-    public static IPlayerById GetPlayerById(this IGrainFactory factory, Guid playerId)
-      => factory.GetGrain<IPlayerById>(playerId);
 
     public static bool PasswordIsValid(string password)
     {

@@ -17,7 +17,7 @@ namespace Actor.GameHub.Identity.Orleans
   {
     private readonly ITransactionalState<PlayerByIdState> _state;
 
-    public PlayerByIdGrain([TransactionalState(IdentityExtensions.PlayerByIdStorage, IdentityExtensions.StorageName)] ITransactionalState<PlayerByIdState> authState)
+    public PlayerByIdGrain([TransactionalState(IdentityOrleansExtensions.PlayerByIdStorage, IdentityOrleansExtensions.StorageName)] ITransactionalState<PlayerByIdState> authState)
     {
       _state = authState;
     }
@@ -31,7 +31,7 @@ namespace Actor.GameHub.Identity.Orleans
       await _state.PerformUpdate(s =>
       {
         s.Username = request.Username;
-        s.PasswordHash = IdentityExtensions.HashPassword(request.Password);
+        s.PasswordHash = IdentityOrleansExtensions.HashPassword(request.Password);
       });
 
       return null;
@@ -44,7 +44,7 @@ namespace Actor.GameHub.Identity.Orleans
         s.Username,
         s.PasswordHash,
       });
-      if (!IdentityExtensions.VerifyPassword(request.Password, player.PasswordHash))
+      if (!IdentityOrleansExtensions.VerifyPassword(request.Password, player.PasswordHash))
         return (IdentityError.Forbidden("password is wrong"), null);
 
       await _state.PerformUpdate(s =>
@@ -88,16 +88,16 @@ namespace Actor.GameHub.Identity.Orleans
 
     public async Task<IdentityError> ChangePassword(ChangePasswordRequest request)
     {
-      if (!IdentityExtensions.PasswordIsValid(request.NewPassword))
+      if (!IdentityOrleansExtensions.PasswordIsValid(request.NewPassword))
         return IdentityError.BadRequest("new password is invalid");
 
       var passwordHash = await _state.PerformRead(s => s.PasswordHash);
-      if (!IdentityExtensions.VerifyPassword(request.OldPassword, passwordHash))
+      if (!IdentityOrleansExtensions.VerifyPassword(request.OldPassword, passwordHash))
         return IdentityError.Forbidden("old password is invalid");
 
       await _state.PerformUpdate(s =>
       {
-        s.PasswordHash = IdentityExtensions.HashPassword(request.NewPassword);
+        s.PasswordHash = IdentityOrleansExtensions.HashPassword(request.NewPassword);
       });
 
       return null;
