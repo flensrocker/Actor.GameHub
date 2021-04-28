@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.6.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Abstractions", "Actor.GameHub.Identity.Abstractions\Actor.GameHub.Identity.Abstractions.csproj", "{A0311DED-FD8D-4065-AD05-7CEE95883C00}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Abstractions", "Identity\Actor.GameHub.Identity.Abstractions\Actor.GameHub.Identity.Abstractions.csproj", "{A0311DED-FD8D-4065-AD05-7CEE95883C00}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Orleans", "Actor.GameHub.Identity.Orleans\Actor.GameHub.Identity.Orleans.csproj", "{57AB1874-8D7A-4A2C-B6EF-A30A61A475DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.Orleans", "Identity\Actor.GameHub.Identity.Orleans\Actor.GameHub.Identity.Orleans.csproj", "{57AB1874-8D7A-4A2C-B6EF-A30A61A475DB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Server", "Actor.GameHub.Server\Actor.GameHub.Server.csproj", "{281B1947-947B-4BB4-9C41-19E026F9AB41}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.AspNetCore", "Actor.GameHub.Identity.AspNetCore\Actor.GameHub.Identity.AspNetCore.csproj", "{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Actor.GameHub.Identity.AspNetCore", "Identity\Actor.GameHub.Identity.AspNetCore\Actor.GameHub.Identity.AspNetCore.csproj", "{354F48EC-46C4-459C-9D61-EA0C88BEEFD7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{2D0A84CB-51B0-4FEF-A191-D372D5626AE0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +74,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A0311DED-FD8D-4065-AD05-7CEE95883C00} = {2D0A84CB-51B0-4FEF-A191-D372D5626AE0}
+		{57AB1874-8D7A-4A2C-B6EF-A30A61A475DB} = {2D0A84CB-51B0-4FEF-A191-D372D5626AE0}
+		{354F48EC-46C4-459C-9D61-EA0C88BEEFD7} = {2D0A84CB-51B0-4FEF-A191-D372D5626AE0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E54C6AEC-5AFD-408D-B638-855C40FC4109}
