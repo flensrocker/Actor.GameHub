@@ -6,14 +6,14 @@ namespace Actor.GameHub.Identity.Abstractions
   public interface IPlayerByUsername : IGrainWithStringKey
   {
     [Transaction(TransactionOption.Create)]
-    Task<RegisterResponse> Register(RegisterRequest request);
+    Task<(IdentityError Error, RegisterResponse Response)> Register(RegisterRequest request);
 
     [Transaction(TransactionOption.Join)]
-    Task SetPlayerId(SetPlayerIdRequest request);
+    Task<IdentityError> SetPlayerId(SetPlayerIdRequest request);
     [Transaction(TransactionOption.Join)]
-    Task Delete();
+    Task<IdentityError> Delete();
 
     [Transaction(TransactionOption.Supported)]
-    Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request);
+    Task<(IdentityError Error, PasswordLoginResponse Response)> PasswordLogin(PasswordLoginRequest request);
   }
 }

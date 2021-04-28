@@ -28,19 +28,19 @@ namespace Actor.GameHub.Server
       {
         endpoints.MapPost("/api/Identity/Player/Register", async context =>
         {
-          try
-          {
-            var registerRequest = await context.Request.ReadFromJsonAsync<RegisterRequest>();
+          var registerRequest = await context.Request.ReadFromJsonAsync<RegisterRequest>();
 
-            var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
-            var playerRegistry = clusterClient.GetPlayerByUsername(registerRequest.Name);
-            var registerResponse = await playerRegistry.Register(registerRequest);
-            await context.Response.WriteAsJsonAsync(registerResponse);
-          }
-          catch (IdentityException iex)
+          var clusterClient = context.RequestServices.GetRequiredService<IClusterClient>();
+          var playerRegistry = clusterClient.GetPlayerByUsername(registerRequest.Name);
+          var (registerError, registerResponse) = await playerRegistry.Register(registerRequest);
+          if (registerError is not null)
           {
-            context.Response.StatusCode = iex.StatusCode;
-            await context.Response.WriteAsJsonAsync(new { ErrorMessage = iex.Message });
+            context.Response.StatusCode = registerError.StatusCode;
+            await context.Response.WriteAsJsonAsync(new { ErrorMessage = registerError.Message });
+          }
+          else
+          {
+            await context.Response.WriteAsJsonAsync(registerResponse);
           }
         });
       });

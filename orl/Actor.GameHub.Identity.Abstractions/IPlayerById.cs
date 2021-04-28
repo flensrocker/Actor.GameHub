@@ -6,15 +6,15 @@ namespace Actor.GameHub.Identity.Abstractions
   public interface IPlayerById : IGrainWithGuidKey
   {
     [Transaction(TransactionOption.Join)]
-    Task Register(RegisterRequest request);
+    Task<IdentityError> Register(RegisterRequest request);
 
     [Transaction(TransactionOption.Create)]
-    Task ChangeName(ChangeNameRequest request);
+    Task<IdentityError> ChangeName(ChangeNameRequest request);
 
     [Transaction(TransactionOption.Supported)]
-    Task ChangePassword(ChangePasswordRequest request);
+    Task<IdentityError> ChangePassword(ChangePasswordRequest request);
 
     [Transaction(TransactionOption.Supported)]
-    Task<PasswordLoginResponse> PasswordLogin(PasswordLoginRequest request);
+    Task<(IdentityError Error, PasswordLoginResponse Response)> PasswordLogin(PasswordLoginRequest request);
   }
 }
