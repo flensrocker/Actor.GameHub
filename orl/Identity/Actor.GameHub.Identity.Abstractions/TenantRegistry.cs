@@ -12,6 +12,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   public abstract class BaseTenantRegistryCommand
   {
+    public Guid RequestId { get; init; }
   }
 
   public class CreateTenantCommand : BaseTenantRegistryCommand
@@ -23,6 +24,7 @@ namespace Actor.GameHub.Identity.Abstractions
 
   public abstract class BaseTenantRegistryEvent
   {
+    public Guid RequestId { get; init; }
   }
 
   public class TenantCreatedEvent : BaseTenantRegistryEvent

@@ -32,6 +32,7 @@ namespace Actor.GameHub.Identity.Orleans
 
       return new CreateTenantErrorEvent
       {
+        RequestId = createCmd.RequestId,
         StatusCode = 400,
         ErrorMessage = errorMsg.ToString(),
       };
@@ -87,6 +88,7 @@ namespace Actor.GameHub.Identity.Orleans
 
                 result = new TenantCreatedEvent
                 {
+                  RequestId = createCmd.RequestId,
                   TenantId = tenantId,
                   TenantShortName = createCmd.TenantShortname,
                 };
@@ -96,6 +98,7 @@ namespace Actor.GameHub.Identity.Orleans
             {
               result = new CreateTenantErrorEvent
               {
+                RequestId = createCmd.RequestId,
                 StatusCode = 500,
                 ErrorMessage = ex.Message,
               };
