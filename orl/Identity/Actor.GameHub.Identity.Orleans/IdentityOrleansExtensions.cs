@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
+using Actor.GameHub.Identity.Abstractions;
 using Orleans;
 using Orleans.Hosting;
 
@@ -18,6 +20,24 @@ namespace Actor.GameHub.Identity.Orleans
         {
           options.ConnectionString = azureStorageConnectionString;
         })
+        // TenantRegistry
+        .AddAzureTableGrainStorage(TenantRegistryConstants.StorageProviderName, options =>
+        {
+          options.UseJson = true;
+          options.ConnectionString = azureStorageConnectionString;
+        })
+        .AddAzureQueueStreams(TenantRegistryConstants.QueueProviderName, config =>
+        {
+          config.ConfigureAzureQueue(queueOptions =>
+          {
+            queueOptions.Configure(options =>
+            {
+              options.ConnectionString = azureStorageConnectionString;
+              options.QueueNames = new List<string> { "tenant-registry-queue-0" };
+            });
+          });
+        })
+        // Grains
         .ConfigureApplicationParts(parts =>
         {
           parts.AddApplicationPart(Assembly.GetExecutingAssembly()).WithReferences();
