@@ -3,6 +3,7 @@ using System.Reflection;
 using Actor.GameHub.Identity.Abstractions;
 using Orleans;
 using Orleans.Hosting;
+using Orleans.Streams;
 
 namespace Actor.GameHub.Identity.Orleans
 {
@@ -36,6 +37,7 @@ namespace Actor.GameHub.Identity.Orleans
               options.QueueNames = new List<string> { "tenant-registry-queue-0" };
             });
           });
+          config.ConfigureStreamPubSub(StreamPubSubType.ImplicitOnly);
         })
         // Grains
         .ConfigureApplicationParts(parts =>

@@ -40,11 +40,10 @@ namespace Actor.GameHub.Identity.Orleans
   }
 
   [ImplicitStreamSubscription(TenantRegistryConstants.StreamNamespace)]
-  public class TenantRegistryGrain : Grain, IGrainWithGuidKey, IAsyncObserver<BaseTenantRegistryCommand>
+  public class TenantRegistryGrain : Grain, IGrainWithGuidKey
   {
     private readonly IPersistentState<TenantRegistryState> _tenantRegistry;
 
-    private IAsyncStream<BaseTenantRegistryCommand> _commandStream;
     private IAsyncStream<BaseTenantRegistryEvent> _eventStream;
 
     public TenantRegistryGrain([PersistentState(nameof(TenantRegistryState), TenantRegistryConstants.StorageProviderName)] IPersistentState<TenantRegistryState> tenantRegistry)
@@ -56,8 +55,9 @@ namespace Actor.GameHub.Identity.Orleans
     {
       var streamProvider = GetStreamProvider(IdentityConstants.StreamProviderName);
 
-      _commandStream = streamProvider.GetStream<BaseTenantRegistryCommand>(this.GetPrimaryKey(), TenantRegistryConstants.StreamNamespace);
-      await _commandStream.SubscribeAsync(this);
+      await streamProvider
+        .GetStream<BaseTenantRegistryCommand>(this.GetPrimaryKey(), TenantRegistryConstants.StreamNamespace)
+        .SubscribeAsync(OnNextAsync);
 
       _eventStream = streamProvider.GetStream<BaseTenantRegistryEvent>(this.GetPrimaryKey(), TenantRegistryConstants.StreamNamespace);
 
@@ -108,16 +108,6 @@ namespace Actor.GameHub.Identity.Orleans
             break;
           }
       }
-    }
-
-    public Task OnCompletedAsync()
-    {
-      return Task.CompletedTask;
-    }
-
-    public Task OnErrorAsync(Exception ex)
-    {
-      return Task.CompletedTask;
     }
   }
 }
