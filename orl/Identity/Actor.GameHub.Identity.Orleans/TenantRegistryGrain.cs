@@ -80,9 +80,6 @@ namespace Actor.GameHub.Identity.Orleans
                 while (!_tenantRegistry.State.TenantIds.Add(tenantId))
                   tenantId = Guid.NewGuid();
 
-                // TODO create tenant-grain for tenant
-                // TODO create user-grain for admin
-
                 await _tenantRegistry.WriteStateAsync();
 
                 result = new TenantCreatedEvent
