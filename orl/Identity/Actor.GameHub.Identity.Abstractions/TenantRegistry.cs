@@ -4,8 +4,6 @@ namespace Actor.GameHub.Identity.Abstractions
 {
   public static class TenantRegistryConstants
   {
-    public const string StorageProviderName = "Identity.TenantRegistry.Storage";
-    public const string QueueProviderName = "Identity.TenantRegistry.Queue";
     public const string StreamNamespace = "Identity.TenantRegistry.Stream";
     public static readonly Guid GrainKey = Guid.Empty;
   }
@@ -30,7 +28,7 @@ namespace Actor.GameHub.Identity.Abstractions
   public class TenantCreatedEvent : BaseTenantRegistryEvent
   {
     public Guid TenantId { get; init; }
-    public string TenantShortName { get; init; }
+    public CreateTenantCommand Command { get; init; }
   }
 
   public class CreateTenantErrorEvent : BaseTenantRegistryEvent

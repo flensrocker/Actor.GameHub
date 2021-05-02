@@ -22,12 +22,12 @@ namespace Actor.GameHub.Identity.Orleans
           options.ConnectionString = azureStorageConnectionString;
         })
         // TenantRegistry
-        .AddAzureTableGrainStorage(TenantRegistryConstants.StorageProviderName, options =>
+        .AddAzureTableGrainStorage(IdentityConstants.StorageProviderName, options =>
         {
           options.UseJson = true;
           options.ConnectionString = azureStorageConnectionString;
         })
-        .AddAzureQueueStreams(TenantRegistryConstants.QueueProviderName, config =>
+        .AddAzureQueueStreams(IdentityConstants.QueueProviderName, config =>
         {
           config.ConfigureAzureQueue(queueOptions =>
           {

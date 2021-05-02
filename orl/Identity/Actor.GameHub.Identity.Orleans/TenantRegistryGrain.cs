@@ -44,22 +44,20 @@ namespace Actor.GameHub.Identity.Orleans
   {
     private readonly IPersistentState<TenantRegistryState> _tenantRegistry;
 
-    private IAsyncStream<BaseTenantRegistryEvent> _eventStream;
+    private IStreamProvider _streamProvider;
 
-    public TenantRegistryGrain([PersistentState(nameof(TenantRegistryState), TenantRegistryConstants.StorageProviderName)] IPersistentState<TenantRegistryState> tenantRegistry)
+    public TenantRegistryGrain([PersistentState(nameof(TenantRegistryState), IdentityConstants.StorageProviderName)] IPersistentState<TenantRegistryState> tenantRegistry)
     {
       _tenantRegistry = tenantRegistry;
     }
 
     public override async Task OnActivateAsync()
     {
-      var streamProvider = GetStreamProvider(IdentityConstants.StreamProviderName);
+      _streamProvider = GetStreamProvider(IdentityConstants.StreamProviderName);
 
-      await streamProvider
+      await _streamProvider
         .GetStream<BaseTenantRegistryCommand>(this.GetPrimaryKey(), TenantRegistryConstants.StreamNamespace)
         .SubscribeAsync(OnNextAsync);
-
-      _eventStream = streamProvider.GetStream<BaseTenantRegistryEvent>(this.GetPrimaryKey(), TenantRegistryConstants.StreamNamespace);
 
       await base.OnActivateAsync();
     }
@@ -72,12 +70,13 @@ namespace Actor.GameHub.Identity.Orleans
           {
             BaseTenantRegistryEvent result;
 
+            var tenantId = TenantRegistryConstants.GrainKey;
             try
             {
               result = createCmd.Validate();
               if (result is null)
               {
-                var tenantId = Guid.NewGuid();
+                tenantId = Guid.NewGuid();
                 while (!_tenantRegistry.State.TenantIds.Add(tenantId))
                   tenantId = Guid.NewGuid();
 
@@ -90,7 +89,7 @@ namespace Actor.GameHub.Identity.Orleans
                 {
                   RequestId = createCmd.RequestId,
                   TenantId = tenantId,
-                  TenantShortName = createCmd.TenantShortname,
+                  Command = createCmd,
                 };
               }
             }
@@ -104,7 +103,8 @@ namespace Actor.GameHub.Identity.Orleans
               };
             }
 
-            await _eventStream.OnNextAsync(result);
+            var eventStream = _streamProvider.GetStream<BaseTenantRegistryEvent>(tenantId, TenantRegistryConstants.StreamNamespace);
+            await eventStream.OnNextAsync(result);
             break;
           }
       }
